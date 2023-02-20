@@ -13,7 +13,8 @@ from django.shortcuts import get_object_or_404
 # Application imports
 from accounts.serializers import UserSerializer, UserDataSerializer
 from .models import UserData
-
+from channels.models import TelegramChannel
+from channels.serializers import ChannelSerializer
 # module imports
 from modules.accounts import utils as auth_utils
 
@@ -45,6 +46,7 @@ def auth_view(request):
         if user_instance is None:
             user_instance = serializer.save()
             user_details = user_data.copy()
+            user_details.update({'tg_username': user_details.get('username')})
             user_details.update({"main_user": user_instance.id})
             user_details_serializer = UserDataSerializer(data=user_details)
             if user_details_serializer.is_valid():
@@ -60,9 +62,14 @@ def auth_view(request):
         token, _ = Token.objects.get_or_create(user=user_instance)
         login_data = {}
         login_data['id'] = user_instance.id
+        login_data['tg_id'] = int(user_instance.get_username())
         login_data['status'] = "ok"
         login_data['token'] = token.key
         login_data['user_details'] = user_details_serializer.data
+        user_channels = TelegramChannel.objects.filter(
+            owner=user_instance.id)
+        login_data['channels'] = ChannelSerializer(
+            user_channels, many=True).data
         return Response(login_data, status=status.HTTP_200_OK)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

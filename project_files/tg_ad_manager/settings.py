@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'accounts',
     'bot_webhook',
     'main',
+    'channels',
 ]
 
 MIDDLEWARE = [

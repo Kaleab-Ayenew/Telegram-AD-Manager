@@ -6,7 +6,6 @@ from django.contrib.auth.models import User
 class UserData(models.Model):
     main_user = models.OneToOneField(
         User, on_delete=models.CASCADE, primary_key=True)
-    tg_id = models.IntegerField(unique=True)
     tg_username = models.CharField(
         max_length=150, unique=True, default=None, null=True)
     photo_url = models.URLField(max_length=500, default=None, null=True)
