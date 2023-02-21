@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'bot_webhook',
     'main',
     'channels',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -143,3 +144,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ('rest_framework.authentication.TokenAuthentication',),
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
 }
+
+
+ADMAN_BOT_TOKEN = "5887325485:AAHqxzNjEjahxprMlo1WDZRyIIZW2vlcQd8"
+
+LOGIN_BOT_TOKEN = "6004606739:AAH3fMMPLiU2iC48xUWlSGGzcxHGQu_f200"

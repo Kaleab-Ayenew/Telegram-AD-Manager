@@ -3,3 +3,4 @@ __pycache__/
 .env
 db.sqlite3
 activate.ps1
+Notes.txt

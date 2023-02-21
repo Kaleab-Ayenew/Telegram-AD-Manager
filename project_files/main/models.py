@@ -18,6 +18,7 @@ class ScheduledPost(models.Model):
     post_buttons = models.JSONField(blank=True, null=True)
     schedules = models.JSONField()
     created_at = models.DateTimeField(default=datetime.utcnow)
+    sent = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.owner.username} : {self.post_content[:50]}"
