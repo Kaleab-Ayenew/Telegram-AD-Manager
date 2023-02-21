@@ -17,7 +17,7 @@ class ScheduledPost(models.Model):
     post_image_id = models.CharField(max_length=200, null=True)
     post_buttons = models.JSONField(blank=True, null=True)
     schedules = models.JSONField()
-    created_at = models.DateTimeField(default=datetime.utcnow)
+    created_at = models.DateTimeField(auto_now_add=True)
     sent = models.BooleanField(default=False)
 
     def __str__(self):

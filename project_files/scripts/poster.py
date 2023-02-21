@@ -11,11 +11,12 @@ def send_post(data, bot_token):
         "chat_id": post_channel,
         "photo": post_image,
         "caption": post_text,
-        "parser": "html"
+        "parse_mode": "html"
     }
 
     if data.post_buttons:
-        post_object.update({"reply_markup": data.post_buttons})
+        buttons = {"inline_keyboard": [data.post_buttons]}
+        post_object.update({"reply_markup": buttons})
 
     url = f"https://api.telegram.org/bot{bot_token}/sendphoto"
 
