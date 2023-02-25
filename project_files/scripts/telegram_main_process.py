@@ -14,23 +14,29 @@ import time
 def run():
     while True:
         ctime = poster.get_api_time()
-        posts = get_posts_by_time('minute')
+        posts = get_posts_by_time(ctime, 'minute')
         if posts is not None:
             print(
                 f"Posts for [{ctime['date']} | {ctime['time']}]")
             print(f"{len(list(posts))} results were returned.")
+            ti = time.perf_counter()
             for p in posts:
-                pass
-
+                p.schedules[str(ctime.get('year'))][str(ctime.get(
+                    'month'))][str(ctime.get('day'))][str(ctime.get('hour'))][str(ctime.get('minute'))] = True
+                p.save()
+            tf = time.perf_counter()
+            tdelta = tf-ti
+            print(f"Posted all the posts in {tdelta} secs")
         else:
             print(
                 f"No posts for time: [{ctime['date']} | {ctime['time']}]")
         time.sleep(20)
 
 
-def get_posts_by_time(unit):
-    ct = poster.get_api_time()
+def get_posts_by_time(ct, unit):
     ct.update({'hour': 15})
+    ct.update({"minute": 27})
+    ct.update({'day': 21})
 
     if unit == 'hour':
         arg = {
