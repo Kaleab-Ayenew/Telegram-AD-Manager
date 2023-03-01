@@ -22,3 +22,9 @@ class ScheduledPost(models.Model):
 
     def __str__(self):
         return f"{self.owner.username} : {self.post_content[:50]}"
+
+    def get_channel(self):
+        return "This post belongs to channel " + self.destination_channel.ch_username
+
+    def get_owner(self):
+        return "This post belongs to user " + self.owner.username
