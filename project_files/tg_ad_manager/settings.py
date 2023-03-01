@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
+import environ
+
+env = environ.Env()
+environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,10 +24,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-9wgh1wt1+qe1x017k#9_&7mc&y%nv%i_+pk()#*8@xcf8&65j4'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(env("DEBUG") == "True")
 
 ALLOWED_HOSTS = []
 
@@ -90,11 +94,11 @@ WSGI_APPLICATION = 'tg_ad_manager.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'Tg-Ad-Manager',
-        'USER': 'postgres',
-        'PASSWORD': 'password',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'NAME': env('DATABASE_NAME'),
+        'USER': env('DATABASE_USER'),
+        'PASSWORD': env('DATABASE_PASSWORD'),
+        'HOST': env('DATABASE_HOST'),
+        'PORT': env('DATABASE_PORT'),
     }
 }
 
@@ -146,6 +150,5 @@ REST_FRAMEWORK = {
 }
 
 
-ADMAN_BOT_TOKEN = "5887325485:AAHqxzNjEjahxprMlo1WDZRyIIZW2vlcQd8"
-
-LOGIN_BOT_TOKEN = "6004606739:AAH3fMMPLiU2iC48xUWlSGGzcxHGQu_f200"
+ADMAN_BOT_TOKEN = env('ADMAN_BOT_TOKEN')
+LOGIN_BOT_TOKEN = env('LOGIN_BOT_TOKEN')
