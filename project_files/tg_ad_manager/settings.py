@@ -149,6 +149,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
 }
 
+if not DEBUG:
+    REST_FRAMEWORK.update({'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    )})
+
 
 ADMAN_BOT_TOKEN = env('ADMAN_BOT_TOKEN')
 LOGIN_BOT_TOKEN = env('LOGIN_BOT_TOKEN')
