@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'main',
     'channels',
     'django_extensions',
+    'bot_webhooks',
 ]
 
 MIDDLEWARE = [
@@ -157,3 +158,6 @@ if not DEBUG:
 
 ADMAN_BOT_TOKEN = env('ADMAN_BOT_TOKEN')
 LOGIN_BOT_TOKEN = env('LOGIN_BOT_TOKEN')
+
+
+INVITE_BOT_TOKEN = env('INVITE_BOT_TOKEN')
