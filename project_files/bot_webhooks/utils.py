@@ -24,8 +24,8 @@ def new_user_rsp(new_user):
     parser = "HTML"
     keyboard = {
         "keyboard": [
-            [{"text": "check_user_stat"}],
-            [{"text": "list_invited_users"}]
+            [{"text": "መረጃዎትን ለመመልከት"}],
+            [{"text": "የጋበዟቸው ሰዎች ዝርዝር"}]
         ]
     }
     msg = f"""
