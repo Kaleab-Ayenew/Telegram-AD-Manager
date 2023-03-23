@@ -2,6 +2,9 @@ from . models import TelegramUser
 from django.conf import settings
 import requests
 
+proxy = {"http": "http://127.0.0.1:6666",
+         "https": "http://127.0.0.1:6666"} if not settings.PROD else None
+
 
 def get_user(user_id):
     try:
@@ -42,8 +45,7 @@ def new_user_rsp(new_user):
 
     url = f"https://api.telegram.org/bot{bot_token}/sendmessage"
 
-    rsp = requests.post(url=url, json=data, proxies={
-                        "http": "http://127.0.0.1:6666", "https": "http://127.0.0.1:6666"})
+    rsp = requests.post(url=url, json=data, proxies=proxy)
     return rsp.json()
 
 
@@ -83,8 +85,7 @@ def user_stat_rsp(user):
 
     url = f"https://api.telegram.org/bot{bot_token}/sendmessage"
 
-    rsp = requests.post(url=url, json=data, proxies={
-                        "http": "http://127.0.0.1:6666", "https": "http://127.0.0.1:6666"})
+    rsp = requests.post(url=url, json=data, proxies=proxy)
     return rsp.json()
 
 
@@ -107,6 +108,5 @@ def empty_rsp(user_id):
 
     url = f"https://api.telegram.org/bot{bot_token}/sendmessage"
 
-    rsp = requests.post(url=url, json=data, proxies={
-                        "http": "http://127.0.0.1:6666", "https": "http://127.0.0.1:6666"})
+    rsp = requests.post(url=url, json=data, proxies=proxy)
     return rsp.json()
