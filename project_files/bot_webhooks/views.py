@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
 from .models import TelegramUser
-from .utils import get_user, new_user_rsp
+from .utils import get_user, new_user_rsp, user_stat_rsp, empty_rsp
 # Create your views here.
 
 import requests
@@ -34,13 +34,24 @@ def invite_bot_requests(request):
 
             if inviter:
                 inviter_user = get_user(inviter)
-                if inviter_user:
+                if inviter_user and inviter != user_id:
                     inviter_user.invited_number = inviter_user.invited_number + 1
                     inviter_user.save()
 
             rsp_code = new_user_rsp(new_user)
+
             print(f"Recieved data `{rsp_code}]` from telegram.\n")
 
             return Response(data=str(rsp_code))
+        else:
+            if msg.strip() == "መረጃዎትን ለመመልከት":
+                user = get_user(user_id)
+                if not user:
+                    return Response(data="Done")
+                stat_rsp = user_stat_rsp(user)
+                return Response(data="Done")
+            else:
+                empty_rsp(user_id)
+                return Response(data="Done")
 
     return Response(data="Done")

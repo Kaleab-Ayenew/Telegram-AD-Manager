@@ -9,5 +9,8 @@ class TelegramUser(models.Model):
     invited_by = models.CharField(max_length=50)
     invited_number = models.IntegerField(default=0)
 
+    class Meta:
+        ordering = ('-invited_number',)
+
     def __str__(self):
         return f"{self.first_name} : {self.invited_number} people"
