@@ -6,7 +6,7 @@ from django.db import models
 class TelegramUser(models.Model):
     tg_user_id = models.CharField(max_length=50)
     first_name = models.CharField(max_length=150)
-    invited_by = models.CharField(max_length=50)
+    invited_by = models.CharField(max_length=50, null=True)
     invited_number = models.IntegerField(default=0)
 
     class Meta:
