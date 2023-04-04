@@ -112,13 +112,13 @@ def empty_rsp(user_id):
     return rsp.json()
 
 
-def proxy_rsp(user):
-    user_id = user.tg_user_id
-    msg = "Click on the link below to connect"
+def proxy_rsp(user_id):
+    msg = "Click on the link below to connect through proxy"
     parser = "HTML"
-    bot_token = settings.INVITE_BOT_TOKEN
+    bot_token = settings.PROXY_BOT_TOKEN
+    print()
     keyboard = {
-        "inline_keyboard	": [
+        "inline_keyboard": [
             [{"text": "Connect to Proxy",
                 "url": "tg://proxy?server=188.166.152.127&port=443&secret=b485071ec729a81c9447866a19f9f387"}],
         ]
