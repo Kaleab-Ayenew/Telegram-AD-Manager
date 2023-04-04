@@ -21,5 +21,5 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('channels/', include('channels.urls')),
     path('main/', include('main.urls')),
-    path('invite-bot/', include('bot_webhooks.urls'))
+    path('bot-webhook/', include('bot_webhooks.urls'))
 ]

@@ -50,14 +50,25 @@ def invite_bot_requests(request):
                     return Response(data="Done")
                 stat_rsp = user_stat_rsp(user)
                 return Response(data="Done")
-            elif msg.strip() == "Connect to Proxy":
-                user = get_user(user_id)
-                if not user:
-                    return Response(data="Done")
-                rsp = proxy_rsp(user)
-                return Response(data="Done")
             else:
                 empty_rsp(user_id)
                 return Response(data="Done")
 
     return Response(data="Done")
+
+
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def proxy_bot_request(request):
+    data = request.data
+    user_id = str(data['message']['from']['id'])
+    first_name = data['message']['from']['first_name']
+    msg = data['message'].get('text')
+    if msg is not None:
+
+        if msg == "/start":
+            rsp = proxy_rsp(user_id)
+            print(rsp)
+            return Response(data="Done")
+        else:
+            return Response(data="Done")
