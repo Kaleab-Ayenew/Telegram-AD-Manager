@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
 from .models import TelegramUser
-from .utils import get_user, new_user_rsp, user_stat_rsp, empty_rsp
+from .utils import get_user, new_user_rsp, user_stat_rsp, empty_rsp, proxy_rsp
 # Create your views here.
 
 import requests
@@ -49,6 +49,12 @@ def invite_bot_requests(request):
                 if not user:
                     return Response(data="Done")
                 stat_rsp = user_stat_rsp(user)
+                return Response(data="Done")
+            elif msg.strip() == "Connect to Proxy":
+                user = get_user(user_id)
+                if not user:
+                    return Response(data="Done")
+                rsp = proxy_rsp(user)
                 return Response(data="Done")
             else:
                 empty_rsp(user_id)
