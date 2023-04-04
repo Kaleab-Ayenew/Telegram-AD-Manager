@@ -112,7 +112,8 @@ def empty_rsp(user_id):
     return rsp.json()
 
 
-def proxy_rsp(user_id):
+def proxy_rsp(user):
+    user_id = user.tg_user_id
     msg = "Click on the link below to connect"
     parser = "HTML"
     bot_token = settings.INVITE_BOT_TOKEN
