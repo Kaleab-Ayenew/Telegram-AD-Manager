@@ -61,7 +61,7 @@ def user_stat_rsp(user):
     keyboard = {
         "keyboard": [
             [{"text": "መረጃዎትን ለመመልከት"}],
-            [{"text": "የጋበዟቸው ሰዎች ዝርዝር"}]
+            [{"text": "Connect to Proxy"}]
         ]
     }
 
@@ -96,7 +96,30 @@ def empty_rsp(user_id):
     keyboard = {
         "keyboard": [
             [{"text": "መረጃዎትን ለመመልከት"}],
-            [{"text": "የጋበዟቸው ሰዎች ዝርዝር"}]
+            [{"text": "Connect to Proxy"}]
+        ]
+    }
+    data = {
+        "text": msg,
+        "chat_id": int(user_id),
+        "parse_mode": parser,
+        "reply_markup": keyboard
+    }
+
+    url = f"https://api.telegram.org/bot{bot_token}/sendmessage"
+
+    rsp = requests.post(url=url, json=data, proxies=proxy)
+    return rsp.json()
+
+
+def proxy_rsp(user_id):
+    msg = "Click on the link below to connect"
+    parser = "HTML"
+    bot_token = settings.INVITE_BOT_TOKEN
+    keyboard = {
+        "inline_keyboard	": [
+            [{"text": "Connect to Proxy",
+                "url": "tg://proxy?server=188.166.152.127&port=443&secret=b485071ec729a81c9447866a19f9f387"}],
         ]
     }
     data = {
