@@ -49,11 +49,13 @@ INSTALLED_APPS = [
     'channels',
     'django_extensions',
     'bot_webhooks',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -163,3 +165,5 @@ LOGIN_BOT_TOKEN = env('LOGIN_BOT_TOKEN')
 INVITE_BOT_TOKEN = env('INVITE_BOT_TOKEN')
 PROXY_BOT_TOKEN = env("PROXY_BOT_TOKEN")
 PROD = env('PROD') == "True"
+
+CORS_ALLOW_ALL_ORIGINS = True
