@@ -1,5 +1,6 @@
 app_env/
 __pycache__/
+media_files/
 .env
 db.sqlite3
 activate.ps1

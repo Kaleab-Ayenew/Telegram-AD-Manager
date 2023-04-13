@@ -28,7 +28,17 @@ class CreateListPost(generics.ListCreateAPIView):
             return None
 
     def get_queryset(self):
-        posts = ScheduledPost.objects.filter(owner=self.request.user.id)
+        print(self.request.query_params)
+        start = int(self.request.query_params.get("s", 0))
+        end = int(self.request.query_params.get("e", 10))
+        print(start, end)
+
+        if end - start != 10:
+            start = 0
+            end = 10
+
+        posts = ScheduledPost.objects.filter(
+            owner=self.request.user.id)[start:end]
         return posts
 
     def create(self, request, *args, **kwargs):
