@@ -23,7 +23,8 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('channels/', include('channels.urls')),
     path('main/', include('main.urls')),
-    path('bot-webhook/', include('bot_webhooks.urls'))
+    path('bot-webhook/', include('bot_webhooks.urls')),
+    path('chapa/', include('chapa.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

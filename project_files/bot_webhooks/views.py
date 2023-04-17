@@ -72,3 +72,15 @@ def proxy_bot_request(request):
             return Response(data="Done")
         else:
             return Response(data="Done")
+
+
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def chapa_pay_bot(request):
+    return Response(data="Hello World")
+
+
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def chapa_api_hook(request):
+    return Response(data="Hello World")
