@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'channels',
     'django_extensions',
     'bot_webhooks',
+    'chapa',
     'corsheaders',
 ]
 
