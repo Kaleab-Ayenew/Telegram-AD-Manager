@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.core.files import File
 
 from rest_framework import generics
 from rest_framework.response import Response
@@ -9,6 +10,9 @@ from .serializers import PostSerializer
 from .permissions import IsAuthAndOwnsObject
 
 from channels.models import TelegramChannel
+
+import base64
+import io
 
 
 class CreateListPost(generics.ListCreateAPIView):
@@ -54,7 +58,7 @@ class CreateListPost(generics.ListCreateAPIView):
                 return Response(data={"error": "Please select another channel."}, status=status.HTTP_404_NOT_FOUND)
 
             serializer.save(owner=request.user,
-                            destination_channel=self.user_owns_channel(dest_ch))
+                            destination_channel=self.user_owns_channel(dest_ch), image=request.data.get('post_image'))
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -84,19 +88,21 @@ class PostRUD(generics.RetrieveUpdateDestroyAPIView):
 
     def update(self, request, *args, **kwargs):
         serializer = PostSerializer(self.get_object(), data=request.data)
+
         if serializer.is_valid():
             print(serializer.validated_data)
 
             # Add type checking here [Check if the value is of the appropriate type]
-            if request.data.get('dest_ch') is None:
+            if request.data.get('channel') is None:
                 return Response(data={"error": "Please provide a target channel."}, status=status.HTTP_400_BAD_REQUEST)
-            dest_ch = request.data.get('dest_ch')
+            dest_ch = request.data.get('channel')
 
             if self.user_owns_channel(dest_ch) is None:
                 return Response(data={"error": "Please select another channel."}, status=status.HTTP_404_NOT_FOUND)
 
             serializer.save(owner=request.user,
-                            destination_channel=self.user_owns_channel(dest_ch))
+                            destination_channel=self.user_owns_channel(dest_ch), image=request.data.get('post_image'))
+            print(serializer.data, "Here is the serializer data")
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
