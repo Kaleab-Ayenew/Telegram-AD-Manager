@@ -15,7 +15,7 @@ CHAPA_PAYMENT_TOKEN = "6141645565:TEST:PDTwkkww6SQb92RDYIok"
 CHAPA_PRIVATE_KEY = "CHASECK_TEST-gXk6cDFDnUpveorEF5UTnkeAXxjvICwu"
 CURRENCY = "ETB"
 
-HOST_URL = 'https://ubuntu-vps.kal-dev.com' if settings.PROD else 'https://bd99-196-191-221-176.ngrok-free.app'
+HOST_URL = 'https://ubuntu-vps.kal-dev.com' if settings.PROD else 'https://0a16-196-191-221-176.ngrok-free.app'
 
 CALLBACK_URL = HOST_URL + "/chapa/callback/"
 CHAPA_URL = "https://api.chapa.co/v1/transaction/initialize"

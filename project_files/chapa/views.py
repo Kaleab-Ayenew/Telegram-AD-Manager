@@ -56,7 +56,10 @@ def chapa_bot_webhook(request):
                 product_id = text.split(' ')[1]
             else:
                 return Response(data='Done')
-            rsp = send_payment_invoice(product_id, id)
+            try:
+                rsp = send_payment_invoice(product_id, id)
+            except Product.DoesNotExist:
+                return Response(data='None')
             print(rsp)
     elif request.data.get('message') and request.data.get('message').get('successful_payment'):
         payment_info = request.data.get('message').get('successful_payment')
@@ -137,21 +140,30 @@ def shop_manager_webhook(request):
                     temp.question_index = temp.question_index + 1
                     temp.save()
                 except IntegrityError:
-                    data.update({'text': 'Wrong Response'})
+                    temp = TempData.objects.get(current_user=chat_id)
+                    data.update({'text': questions[temp.question_index]})
+                    temp.question_index = temp.question_index + 1
+                    temp.save()
+                    # data.update({'text': 'Wrong Response'})
 
                 rsp = shop_bot_request(data)
                 print(rsp)
 
             elif TempData.objects.filter(current_user=chat_id).exists() and TempData.objects.filter(current_user=chat_id)[0].question_index > 0 and TempData.objects.filter(current_user=chat_id)[0].question_index < len(questions):
                 temp = TempData.objects.filter(current_user=chat_id)[0]
-                if temp.question_index == 1:
-                    product_id = save_product_info(
-                        {questions[temp.question_index-1]: text})
-                    temp.current_product_id = product_id
-                else:
-                    product_id = temp.current_product_id
-                    save_product_info(
-                        {questions[temp.question_index-1]: text}, product_id)
+                try:
+                    if temp.question_index == 1:
+                        product_id = save_product_info(
+                            {questions[temp.question_index-1]: text})
+                        temp.current_product_id = product_id
+                    else:
+                        product_id = temp.current_product_id
+                        save_product_info(
+                            {questions[temp.question_index-1]: text}, product_id)
+                except ValueError:
+                    data.update({"text": "Please enter a valid price"})
+                    rsp = shop_bot_request(data)
+                    return Response(data='Done')
 
                 data.update({'text': questions[temp.question_index]})
                 temp.question_index += 1
@@ -160,12 +172,19 @@ def shop_manager_webhook(request):
                 print(rsp)
 
             elif TempData.objects.filter(current_user=chat_id).exists() and TempData.objects.filter(current_user=chat_id)[0].question_index == len(questions):
-                image_id = request.data.get('message').get('photo')[
-                    2].get('file_id')
-                image_width = request.data.get('message').get('photo')[
-                    2].get('width')
-                image_height = request.data.get('message').get('photo')[
-                    2].get('height')
+                try:
+                    image_id = request.data.get('message').get('photo')[
+                        2].get('file_id')
+                    image_width = request.data.get('message').get('photo')[
+                        2].get('width')
+                    image_height = request.data.get('message').get('photo')[
+                        2].get('height')
+                except TypeError:
+                    temp = TempData.objects.filter(
+                        current_user=chat_id)[0]
+                    temp.delete()
+                    return Response(data='Done')
+
                 image = {'file_id': image_id,
                          'width': image_width, 'height': image_height}
                 temp = TempData.objects.filter(
@@ -190,7 +209,6 @@ def shop_manager_webhook(request):
                 product_id = temp.current_product_id
                 post_data.update(
                     {'chat_id': chat_id, 'product_id': product_id})
-                rsp = shop_bot_channel_post(post_data)
 
                 data = {
                     'chat_id': chat_id,
@@ -198,12 +216,23 @@ def shop_manager_webhook(request):
                     'buttons': ['Add a new product', 'List all products']
                 }
 
-                if rsp.status_code != 200:
+                try:
+                    rsp = shop_bot_channel_post(post_data)
+                    if rsp.status_code != 200:
+                        print(rsp.json())
+                        data = {
+                            'chat_id': chat_id,
+                            'text': "🛑 Failed to post the product to your channel. Please try again. 🛑",
+                            'buttons': ['Add a new product', 'List all products']
+                        }
+                except Product.DoesNotExist:
+                    print("The Product Doesn't exist")
                     data = {
                         'chat_id': chat_id,
                         'text': "🛑 Failed to post the product to your channel. Please try again. 🛑",
                         'buttons': ['Add a new product', 'List all products']
                     }
+
                 product_info = {}
 
                 rsp = shop_bot_request(data)
