@@ -142,7 +142,7 @@ def shop_manager_webhook(request):
                 rsp = shop_bot_request(data)
                 print(rsp)
 
-            elif TempData.objects.filter(current_user=chat_id)[0].question_index > 0 and TempData.objects.filter(current_user=chat_id)[0].question_index < len(questions):
+            elif TempData.objects.filter(current_user=chat_id).exists() and TempData.objects.filter(current_user=chat_id)[0].question_index > 0 and TempData.objects.filter(current_user=chat_id)[0].question_index < len(questions):
                 temp = TempData.objects.filter(current_user=chat_id)[0]
                 if temp.question_index == 1:
                     product_id = save_product_info(
@@ -159,7 +159,7 @@ def shop_manager_webhook(request):
                 rsp = shop_bot_request(data)
                 print(rsp)
 
-            elif TempData.objects.filter(current_user=chat_id)[0].question_index == len(questions):
+            elif TempData.objects.filter(current_user=chat_id).exists() and TempData.objects.filter(current_user=chat_id)[0].question_index == len(questions):
                 image_id = request.data.get('message').get('photo')[
                     2].get('file_id')
                 image_width = request.data.get('message').get('photo')[
@@ -183,7 +183,7 @@ def shop_manager_webhook(request):
                 rsp = shop_bot_request(data)
                 print(rsp)
 
-            elif TempData.objects.get(current_user=chat_id).question_index == 0 and text == 'Post to Channel':
+            elif TempData.objects.filter(current_user=chat_id).exists() and TempData.objects.get(current_user=chat_id).question_index == 0 and text == 'Post to Channel':
                 post_data = {}
                 temp = TempData.objects.filter(
                     current_user=chat_id)[0]
@@ -191,6 +191,13 @@ def shop_manager_webhook(request):
                 post_data.update(
                     {'chat_id': chat_id, 'product_id': product_id})
                 rsp = shop_bot_channel_post(post_data)
+
+                data = {
+                    'chat_id': chat_id,
+                    'text': "Product has been posted to your channel.",
+                    'buttons': ['Add a new product', 'List all products']
+                }
+
                 if rsp.status_code != 200:
                     data = {
                         'chat_id': chat_id,
@@ -198,12 +205,6 @@ def shop_manager_webhook(request):
                         'buttons': ['Add a new product', 'List all products']
                     }
                 product_info = {}
-
-                data = {
-                    'chat_id': chat_id,
-                    'text': "Product has been posted to your channel.",
-                    'buttons': ['Add a new product', 'List all products']
-                }
 
                 rsp = shop_bot_request(data)
                 temp.delete()
