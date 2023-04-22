@@ -15,7 +15,7 @@ CHAPA_PAYMENT_TOKEN = "6141645565:TEST:PDTwkkww6SQb92RDYIok"
 CHAPA_PRIVATE_KEY = "CHASECK_TEST-gXk6cDFDnUpveorEF5UTnkeAXxjvICwu"
 CURRENCY = "ETB"
 
-HOST_URL = 'https://ubuntu-vps.kal-dev.com'
+HOST_URL = 'https://ubuntu-vps.kal-dev.com' if settings.PROD else 'https://bd99-196-191-221-176.ngrok-free.app'
 
 CALLBACK_URL = HOST_URL + "/chapa/callback/"
 CHAPA_URL = "https://api.chapa.co/v1/transaction/initialize"
@@ -65,7 +65,7 @@ def check_webhook_origin(hash):
 def send_payment_invoice(product_id, chat_id):
     url = f'https://api.telegram.org/bot{CHAPA_BOT_TOKEN}/sendinvoice'
     product_info = get_product_info(product_id)
-    image_url = str(product_info.product_image)
+    image_url = HOST_URL + '/media/' + str(product_info.product_image)
     data = {
         "chat_id": chat_id,
         'title': product_info.product_name,
@@ -81,7 +81,7 @@ def send_payment_invoice(product_id, chat_id):
         'prices': [
             {
                 'label': 'Payment Amount',
-                'amount': product_info.product_price,
+                'amount': product_info.product_price * 100,
             },
         ]
     }
@@ -118,29 +118,48 @@ def shop_bot_request(data):
     return rsp.json()
 
 
-def save_product_info(data):
+def save_product_info(data, product_id=None):
 
     url = f'https://api.telegram.org/bot{SHOP_BOT_TOKEN}/getfile'
-    rsp = requests.post(url=url, json={'file_id': data.get(
-        'Send product image?').get('file_id')}, proxies=proxy)
 
-    print(rsp.json())
-    if rsp.status_code == 200:
-        file_path = rsp.json().get('result').get('file_path')
-        photo_url = f'https://api.telegram.org/file/bot{SHOP_BOT_TOKEN}/{file_path}'
-        photo_data = requests.get(photo_url, proxies=proxy)
-        stream = io.BytesIO(photo_data.content)
-    else:
+    if data.get('Send product image?'):
+        rsp = requests.post(url=url, json={'file_id': data.get(
+            'Send product image?').get('file_id')}, proxies=proxy)
+
         print(rsp.json())
-        return None
-    ext = file_path.split('.')[-1]
-    product = Product.objects.create()
-    product.product_name = data.get('What is the product name?')
-    product.product_description = data.get('What is the product description?')
-    product.product_price = data.get('What is the product price?')
-    product.product_image.save(f'photo.{ext}', File(stream), save=False)
-    product.image_height = data.get('Send product image?').get('height')
-    product.image_width = data.get('Send product image?').get('width')
+        if rsp.status_code == 200:
+            file_path = rsp.json().get('result').get('file_path')
+            photo_url = f'https://api.telegram.org/file/bot{SHOP_BOT_TOKEN}/{file_path}'
+            photo_data = requests.get(photo_url, proxies=proxy)
+            stream = io.BytesIO(photo_data.content)
+            ext = file_path.split('.')[-1]
+        else:
+            stream = None
+    else:
+        stream = None
+
+    if product_id:
+        product = Product.objects.get(unique_id=product_id)
+    else:
+        product = Product.objects.create()
+
+    name = data.get(
+        'What is the product name?')
+    desc = data.get('What is the product description?')
+    price = data.get('What is the product price?')
+    print('Name: ', name, 'Desc: ', desc, "Price: ", price)
+
+    if name:
+        product.product_name = name
+    if desc:
+        product.product_description = desc
+    if price:
+        product.product_price = price
+
+    if stream:
+        product.product_image.save(f'photo.{ext}', File(stream), save=False)
+        product.image_height = data.get('Send product image?').get('height')
+        product.image_width = data.get('Send product image?').get('width')
     product.save()
 
     return str(product.unique_id)
@@ -153,15 +172,16 @@ def get_product_info(product_id):
 
 
 def shop_bot_channel_post(data):
-    title = data.get('What is the product name?')
-    description = data.get('What is the product description?')
-    price = data.get('What is the product price?')
-    image = data.get('Send product image?')
-    product_id = save_product_info(data)
+    product = Product.objects.get(unique_id=data.get('product_id'))
+    product_id = str(product.unique_id)
+    title = product.product_name
+    description = product.product_description
+    price = product.product_price
+    image = HOST_URL + '/media/' + str(product.product_image)
     post_data = {
         'chat_id': '@suqshop',
         'caption': f'''🔸<strong>{title}</strong>🔸\n\n{description}\n\nPrice: {price}''',
-        'photo': image.get('file_id'),
+        'photo': image,
         'parse_mode': 'html',
         'reply_markup': {
             'inline_keyboard': [[{'text': f'Buy for {price} birr', 'url': f'https://t.me/blackstorm_paybot?start={product_id}'}]]
@@ -171,7 +191,7 @@ def shop_bot_channel_post(data):
 
     rsp = requests.post(url=url, json=post_data, proxies=proxy)
 
-    return rsp.json()
+    return rsp
 
 
 def send_bot_msg(data, token):

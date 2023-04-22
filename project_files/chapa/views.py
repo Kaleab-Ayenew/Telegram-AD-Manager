@@ -3,9 +3,12 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
+from django.db import IntegrityError
+
+from .models import TempData, Product
 import requests
 
-from .utils import request_payment, check_webhook_origin, send_payment_invoice, answer_callback_query, shop_bot_request, shop_bot_channel_post, send_bot_msg
+from .utils import request_payment, check_webhook_origin, send_payment_invoice, answer_callback_query, shop_bot_request, shop_bot_channel_post, send_bot_msg, save_product_info
 
 
 @api_view(['POST'])
@@ -111,63 +114,107 @@ def shop_manager_webhook(request):
                      'What is the product price?', 'Send product image?']
 
         data = {'chat_id': chat_id}
+        try:
+            if text == '/start':
+                data.update(
+                    {'text': 'Add this bot as an Admin to your channel'})
+                rsp = shop_bot_request(data)
+                print(rsp)
+            if text == 'hi':
+                data = {
+                    'chat_id': chat_id,
+                    'text': "Welcome to Black Storm Shop Manager",
+                    'buttons': ['Add a new product', 'List all products']
+                }
 
-        if text == '/start':
-            data.update({'text': 'Add this bot as an Admin to your channel'})
-            rsp = shop_bot_request(data)
-            print(rsp)
-        if text == 'hi':
+                rsp = shop_bot_request(data)
+                print(rsp)
+
+            elif text == 'Add a new product':
+                try:
+                    temp = TempData.objects.create(current_user=chat_id)
+                    data.update({'text': questions[temp.question_index]})
+                    temp.question_index = temp.question_index + 1
+                    temp.save()
+                except IntegrityError:
+                    data.update({'text': 'Wrong Response'})
+
+                rsp = shop_bot_request(data)
+                print(rsp)
+
+            elif TempData.objects.filter(current_user=chat_id)[0].question_index > 0 and TempData.objects.filter(current_user=chat_id)[0].question_index < len(questions):
+                temp = TempData.objects.filter(current_user=chat_id)[0]
+                if temp.question_index == 1:
+                    product_id = save_product_info(
+                        {questions[temp.question_index-1]: text})
+                    temp.current_product_id = product_id
+                else:
+                    product_id = temp.current_product_id
+                    save_product_info(
+                        {questions[temp.question_index-1]: text}, product_id)
+
+                data.update({'text': questions[temp.question_index]})
+                temp.question_index += 1
+                temp.save()
+                rsp = shop_bot_request(data)
+                print(rsp)
+
+            elif TempData.objects.filter(current_user=chat_id)[0].question_index == len(questions):
+                image_id = request.data.get('message').get('photo')[
+                    2].get('file_id')
+                image_width = request.data.get('message').get('photo')[
+                    2].get('width')
+                image_height = request.data.get('message').get('photo')[
+                    2].get('height')
+                image = {'file_id': image_id,
+                         'width': image_width, 'height': image_height}
+                temp = TempData.objects.filter(
+                    current_user=chat_id)[0]
+
+                product_id = temp.current_product_id
+
+                save_product_info(
+                    {questions[temp.question_index-1]: image}, product_id)
+
+                temp.question_index = 0
+                temp.save()
+                data.update({'text': 'Product has been added succesfully',
+                            'buttons': ['Post to Channel']})
+                rsp = shop_bot_request(data)
+                print(rsp)
+
+            elif TempData.objects.get(current_user=chat_id).question_index == 0 and text == 'Post to Channel':
+                post_data = {}
+                temp = TempData.objects.filter(
+                    current_user=chat_id)[0]
+                product_id = temp.current_product_id
+                post_data.update(
+                    {'chat_id': chat_id, 'product_id': product_id})
+                rsp = shop_bot_channel_post(post_data)
+                if rsp.status_code != 200:
+                    data = {
+                        'chat_id': chat_id,
+                        'text': "🛑 Failed to post the product to your channel. Please try again. 🛑",
+                        'buttons': ['Add a new product', 'List all products']
+                    }
+                product_info = {}
+
+                data = {
+                    'chat_id': chat_id,
+                    'text': "Product has been posted to your channel.",
+                    'buttons': ['Add a new product', 'List all products']
+                }
+
+                rsp = shop_bot_request(data)
+                temp.delete()
+                print(rsp)
+        except TempData.DoesNotExist:
             data = {
                 'chat_id': chat_id,
-                'text': "Welcome to Black Storm Shop Manager",
+                'text': "An error has occured",
                 'buttons': ['Add a new product', 'List all products']
             }
 
             rsp = shop_bot_request(data)
-            print(rsp)
-        elif text == 'Add a new product' and product_form_index == 0:
-            data.update({'text': questions[product_form_index]})
-            product_form_index += 1
-            rsp = shop_bot_request(data)
-            print(rsp)
-
-        elif product_form_index > 0 and product_form_index < len(questions):
-            product_info.update({questions[product_form_index-1]: text})
-            data.update({'text': questions[product_form_index]})
-            product_form_index += 1
-            rsp = shop_bot_request(data)
-            print(rsp)
-
-        elif product_form_index == len(questions):
-            image_id = request.data.get('message').get('photo')[
-                2].get('file_id')
-            image_width = request.data.get('message').get('photo')[
-                2].get('width')
-            image_height = request.data.get('message').get('photo')[
-                2].get('height')
-            image = {'file_id': image_id,
-                     'width': image_width, 'height': image_height}
-            product_info.update({questions[product_form_index-1]: image})
-            product_form_index = 0
-            print(product_info)
-            data.update({'text': 'Product has been added succesfully',
-                        'buttons': ['Post to Channel']})
-            rsp = shop_bot_request(data)
-            print(rsp)
-
-        elif product_form_index == 0 and text == 'Post to Channel':
-            post_data = {**product_info}
-            post_data.update({'chat_id': chat_id})
-            shop_bot_channel_post(post_data)
-            product_info = {}
-
-            data = {
-                'chat_id': chat_id,
-                'text': "Product has been posted to your channel.",
-                'buttons': ['Add a new product', 'List all products']
-            }
-
-            rsp = shop_bot_request(data)
-            print(rsp)
 
     return Response(data='Done')
