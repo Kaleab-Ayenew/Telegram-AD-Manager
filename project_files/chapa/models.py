@@ -23,7 +23,7 @@ class Product(models.Model):
 class TempData(models.Model):
     current_product_id = models.CharField(
         max_length=50, null=True, unique=True)
-    current_user = models.BigIntegerField()
+    current_user = models.BigIntegerField(unique=True)
     question_index = models.IntegerField(default=0)
 
     class Meta:
