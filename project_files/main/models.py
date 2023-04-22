@@ -36,7 +36,7 @@ class ScheduledPost(models.Model):
     post_buttons = models.JSONField(blank=True, null=True)
     start_date = models.DateField(default=get_default_sdate)
     end_date = models.DateField(default=get_default_edate)
-    post_time = models.DateTimeField(default=datetime.now())
+    post_time = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
     sent = models.BooleanField(default=False)
 
