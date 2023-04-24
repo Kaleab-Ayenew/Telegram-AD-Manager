@@ -19,6 +19,9 @@ class Product(models.Model):
     owner_telegram_id = models.BigIntegerField(null=True)
     target_channel_id = models.BigIntegerField(null=True)
 
+    def __str__(self):
+        return self.product_name
+
 
 class TempData(models.Model):
     current_product_id = models.CharField(
