@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404
+
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.decorators import permission_classes
@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny
 from django.db import IntegrityError
 
 from .models import TempData, Product
-import requests
+
 
 from .utils import request_payment, check_webhook_origin, send_payment_invoice, answer_callback_query, shop_bot_request, shop_bot_channel_post, send_bot_msg, save_product_info
 
@@ -144,7 +144,6 @@ def shop_manager_webhook(request):
                     data.update({'text': questions[temp.question_index]})
                     temp.question_index = temp.question_index + 1
                     temp.save()
-                    # data.update({'text': 'Wrong Response'})
 
                 rsp = shop_bot_request(data)
                 print(rsp)
