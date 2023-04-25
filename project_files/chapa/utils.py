@@ -147,7 +147,6 @@ def save_product_info(data, product_id=None):
         'What is the product name?')
     desc = data.get('What is the product description?')
     price = data.get('What is the product price?')
-    print('Name: ', name, 'Desc: ', desc, "Price: ", price)
 
     if name:
         product.product_name = name
