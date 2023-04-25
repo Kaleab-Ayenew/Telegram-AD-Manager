@@ -120,7 +120,7 @@ def shop_manager_webhook(request):
         try:
             if text == '/start':
                 data.update(
-                    {'text': 'Add this bot as an Admin to your channel'})
+                    {'text': 'Add this bot as an Admin to your channel : BOT_VERSION[2.0]'})
                 rsp = shop_bot_request(data)
                 print(rsp)
             if text == 'hi':
