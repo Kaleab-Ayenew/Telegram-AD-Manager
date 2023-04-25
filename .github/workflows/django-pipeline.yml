@@ -31,6 +31,7 @@ jobs:
         source ./app_env/bin/activate
         python -m pip install --upgrade pip
         pip install -r ../requirements.txt
+        pip install gunicorn
         deactivate
     - name: Create ENV file
       working-directory: ./project_files/tg_ad_manager
