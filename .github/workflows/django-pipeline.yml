@@ -32,6 +32,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r ../requirements.txt
         deactivate
+    - name: Create ENV file
+      working-directory: ./project_files/tg_ad_manager
+      run: |
+          echo "${{ secrets.ENV_DATA }}" > .env
     - name: Migrate Database Changes
       working-directory: ./project_files
       run: |
