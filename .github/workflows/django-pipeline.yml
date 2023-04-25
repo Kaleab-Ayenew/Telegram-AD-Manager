@@ -44,7 +44,7 @@ jobs:
         deactivate
     - name: Move to projects directory
       run: |
-        mv ../Telegram-AD-Manager /home/kalish/projects
+        cp ../Telegram-AD-Manager /home/kalish/projects
     - name: Restart Gunicorn Server
       run: |
         sudo systemctl restart gunicorn
