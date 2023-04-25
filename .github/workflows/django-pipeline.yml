@@ -1,0 +1,52 @@
+name: Django CD pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: self-hosted
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: ['3.10']
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Setting Up Virtual Env
+      working-directory: ./project_files
+      run: |
+        python3.10 -m venv app_env
+    - name: Install Dependencies
+      working-directory: ./project_files
+      run: |
+        source ./app_env/bin/activate
+        python -m pip install --upgrade pip
+        pip install -r ../requirements.txt
+        pip install gunicorn
+        deactivate
+    - name: Create ENV file
+      working-directory: ./project_files/tg_ad_manager
+      run: |
+          echo "${{ secrets.ENV_DATA }}" > .env
+    - name: Migrate Database Changes
+      working-directory: ./project_files
+      run: |
+        source ./app_env/bin/activate
+        python manage.py migrate
+        deactivate
+    - name: Move to projects directory
+      run: |
+        cp -R ../Telegram-AD-Manager/* /home/kalish/projects/Telegram-AD-Manager/
+    - name: Restart Gunicorn Server
+      working-directory: /home/kalish/
+      run: |
+        sudo systemctl restart gunicorn
