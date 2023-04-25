@@ -1,0 +1,43 @@
+name: Django CD pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.10]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Setting Up Virtual Env
+      working-directory: ./project_files
+      run: |
+        sudo python3.10 -m venv app_env
+    - name: Install Dependencies
+      working-directory: ./project_files
+      run: |
+        source ./app_env/bin/activate
+        python -m pip install --upgrade pip
+        pip install -r ../requirements.txt
+        deactivate
+    - name: Migrate Database Changes
+      working-directory: ./project_files
+      run: |
+        source ./app_env/bin/activate
+        python manage.py migrate
+        deactivate
+    - name: Restart Gunicorn Server
+      run: |
+        sudo systemctl restart gunicorn
