@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'bot_webhooks',
     'chapa',
+    'personal_feed_bot',
     'corsheaders',
 ]
 
@@ -171,6 +172,11 @@ LOGIN_BOT_TOKEN = env('LOGIN_BOT_TOKEN')
 
 INVITE_BOT_TOKEN = env('INVITE_BOT_TOKEN')
 PROXY_BOT_TOKEN = env("PROXY_BOT_TOKEN")
+
+FEEDGRAM_BOT_TOKEN = env('FEEDGRAM_BOT_TOKEN')
 PROD = env('PROD') == "True"
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+PROXY = None if PROD else {
+    'http': 'http://127.0.0.1:6666', 'https': 'http://127.0.0.1:6666'}
