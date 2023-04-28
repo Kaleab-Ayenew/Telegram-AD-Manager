@@ -45,7 +45,6 @@ def user_bot_webhook(request):
 
         # If the user didn't add a channel
         if not utils.get_user(user_id).feed_channel_id:
-            utils.create_user(user_id=user_id, first_name=first_name)
             text = "Please create a new channel and add this bot as an admin!"
             utils.send_message(user_id, text)
             return Response(data='Done')
