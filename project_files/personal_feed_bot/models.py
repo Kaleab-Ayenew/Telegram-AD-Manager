@@ -28,4 +28,5 @@ class ConnectedChannels(models.Model):
 
 class TempData(models.Model):
     active_user = models.CharField(max_length=50, unique=True)
+    form_name = models.CharField(max_length=70)
     active_question = models.IntegerField(default=0)

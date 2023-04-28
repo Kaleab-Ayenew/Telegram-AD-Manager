@@ -2,6 +2,7 @@ import requests
 from django.conf import settings
 from modules.global_utils.utils import BotMessage, bot_request
 from .models import BotUser, ConnectedChannels, TempData
+from more_itertools import batched
 
 proxy = None if settings.PROD else {
     'http': 'http://127.0.0.1:6666', 'https': 'http://127.0.0.1:6666'}
@@ -82,6 +83,17 @@ def get_connected_channel(user_id, channel_username):
         return None
 
 
+def list_connected_channel(user_id):
+    owner_user = BotUser.objects.get(user_id=user_id)
+    channel_list = ConnectedChannels.objects.filter(
+        owner_user=owner_user)
+
+    if channel_list.exists():
+        return channel_list
+    else:
+        return None
+
+
 def remove_connected_channel(user_id, channel_username):
     owner_user = BotUser.objects.get(user_id=user_id)
     connection = ConnectedChannels.objects.get(
@@ -89,9 +101,10 @@ def remove_connected_channel(user_id, channel_username):
     connection.delete()
 
 
-def create_temp_data(user_id):
+def create_temp_data(user_id, form_name):
 
-    temp_data = TempData.objects.create(active_user=user_id)
+    temp_data = TempData.objects.create(
+        active_user=user_id, form_name=form_name)
     temp_data.save()
     return temp_data
 
@@ -121,3 +134,31 @@ def check_channel(username):
 def populate_form(index, user_id, data):
     if index == 0:
         conn = add_connected_channel(user_id, data)
+
+
+def split_list(l, n):
+    new_list = [i for i in batched(l, n)]
+    return new_list
+
+
+def list_to_button(l, i=0):
+
+    list_10 = split_list(l, 10)
+    if (i+1) > len(list_10) or i < 0:
+        i = 0
+
+    button_list = []
+    cut_list = list_10[i]
+    _ = split_list(cut_list, 2)
+
+    for b in _:
+        btn = [{'text': t.channel_username} for t in b]
+        button_list.append(btn)
+
+    if (i+1) < len(list_10):
+        button_list.append([{'text': 'More Channels'}])
+    if i > 0:
+        button_list.append([{'text': 'Previous Channels'}])
+    button_list.append([{'text': 'Back to Home'}])
+
+    return button_list
