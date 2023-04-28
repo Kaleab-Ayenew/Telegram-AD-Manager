@@ -19,17 +19,25 @@ def user_bot_webhook(request):
         user = update.get('from')
         if chat.get('type') == 'channel' and utils.get_user(user.get('id')):
             if update.get('new_chat_member') and update.get('new_chat_member').get('status') == 'administrator':
-                utils.add_feed_channel(user.get('id'), chat.get(
-                    'id'), chat.get('title'), chat.get('username'))
-                buttons = data.BUTTON_LIST[0]
-                utils.send_message(user_id=user.get(
-                    'id'), text="The bot was successfully added to your channel.", buttons=buttons)
+                if utils.get_user(user_id) and not utils.get_user(user_id).feed_channel_id:
+                    utils.add_feed_channel(user.get('id'), chat.get(
+                        'id'), chat.get('title'), chat.get('username'))
+                    buttons = data.BUTTON_LIST[0]
+                    utils.send_message(user_id=user.get(
+                        'id'), text="The bot was successfully added to your channel.", buttons=buttons)
+                    return Response(data='Done')
+                elif utils.get_user(user_id) and utils.get_user(user_id).feed_channel_id:
+                    utils.send_message(user_id=user.get(
+                        'id'), text="Sorry, you cannot add more than one channel.", buttons=buttons)
+                    return Response(data='Done')
+
             elif update.get('new_chat_member') and update.get('new_chat_member').get('status') == 'left':
                 user_object = utils.get_user(user.get('id'))
                 if user_object.feed_channel_id == str(chat.get('id')):
                     utils.remove_feed_channel(user.get('id'))
-                utils.send_message(user_id=user.get(
-                    'id'), text="The bot was successfully removed from your channel.")
+                    utils.send_message(user_id=user.get(
+                        'id'), text="The bot was successfully removed from your channel.")
+                    return Response(data='Done')
 
     if request.data.get('message'):
         user_id = request.data.get('message').get('from').get('id')
