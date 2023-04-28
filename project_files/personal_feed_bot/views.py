@@ -42,7 +42,14 @@ def user_bot_webhook(request):
                 utils.create_user(user_id=user_id, first_name=first_name)
                 text = f"Welcome {first_name}.\n\nPlease create a new public channel, and add this bot as an admin."
                 utils.send_message(user_id, text)
+                return Response(data='Done')
+
         # If the message is Add Channels
+        if not utils.get_user(user_id).feed_channel_id:
+            text = "Please create a new channel and add this bot as an admin!"
+            utils.send_message(user_id, text)
+            return Response(data='Done')
+
         if utils.get_user(user_id) and utils.get_user(user_id).feed_channel_id:
 
             if not utils.get_temp_data(user_id):
@@ -116,7 +123,7 @@ def user_bot_webhook(request):
 
                         if utils.get_connected_channel(user_id, message):
                             utils.send_message(
-                                user_id, "This channel already exists. [ADD_CHANNEL]", buttons=data.BUTTON_LIST[0])
+                                user_id, "This channel already exists.", buttons=data.BUTTON_LIST[0])
                             temp_data.delete()
                             return Response(data='Done')
 
@@ -124,14 +131,14 @@ def user_bot_webhook(request):
                             utils.add_connected_channel(user_id, message)
                             buttons = data.BUTTON_LIST[0]
                             utils.send_message(
-                                user_id, "A new channel was succesfully added. [ADD_CHANNEL]", buttons=buttons)
+                                user_id, "A new channel was succesfully added.", buttons=buttons)
                             temp_data.delete()
                             return Response(data='Done')
 
                         else:
                             buttons = data.BUTTON_LIST[0]
                             utils.send_message(
-                                user_id, "This channel doesn't exist. [ADD_CHANNEL]", buttons=buttons)
+                                user_id, "This channel doesn't exist.", buttons=buttons)
                             temp_data.delete()
                             return Response(data='Done')
 
@@ -179,12 +186,12 @@ def user_bot_webhook(request):
                     if utils.get_connected_channel(user_id, message):
                         utils.remove_connected_channel(user_id, message)
                         utils.send_message(
-                            user_id, f'Channel {message} was removed succesfully. [REMOVE_CHANNEL]', buttons=data.BUTTON_LIST[0])
+                            user_id, f'Channel {message} was removed succesfully.', buttons=data.BUTTON_LIST[0])
                         temp_data.delete()
                         return Response(data='Done')
                     else:
                         utils.send_message(
-                            user_id, "This channel doesn't exist. [REMOVE_CHANNEL]", buttons=data.BUTTON_LIST[0])
+                            user_id, "This channel doesn't exist.", buttons=data.BUTTON_LIST[0])
                         temp_data.delete()
                         return Response(data='Done')
                     ##########################
