@@ -36,16 +36,16 @@ def user_bot_webhook(request):
         first_name = request.data.get('message').get('from').get('first_name')
         message = request.data.get('message').get('text')
 
-        # If the message is a '/start' message
-        if message == '/start':
-            if not utils.get_user(user_id):
-                utils.create_user(user_id=user_id, first_name=first_name)
-                text = f"Welcome {first_name}.\n\nPlease create a new public channel, and add this bot as an admin."
-                utils.send_message(user_id, text)
-                return Response(data='Done')
+        # If the user is not registered
+        if not utils.get_user(user_id):
+            utils.create_user(user_id=user_id, first_name=first_name)
+            text = f"Welcome {first_name}.\n\nPlease create a new public channel, and add this bot as an admin."
+            utils.send_message(user_id, text)
+            return Response(data='Done')
 
-        # If the message is Add Channels
+        # If the user didn't add a channel
         if not utils.get_user(user_id).feed_channel_id:
+            utils.create_user(user_id=user_id, first_name=first_name)
             text = "Please create a new channel and add this bot as an admin!"
             utils.send_message(user_id, text)
             return Response(data='Done')
