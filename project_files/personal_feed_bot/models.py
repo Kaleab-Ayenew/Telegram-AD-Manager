@@ -18,6 +18,7 @@ class ConnectedChannels(models.Model):
     owner_user = models.ForeignKey(
         BotUser, on_delete=models.CASCADE, related_name='connected_channels')
     channel_username = models.CharField(max_length=50)
+    last_post = models.IntegerField(null=True)
 
     def __str__(self):
         return f"{self.owner_user} | {self.channel_username}"
