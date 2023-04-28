@@ -43,6 +43,12 @@ jobs:
         source ./app_env/bin/activate
         python manage.py migrate
         deactivate
+    - name: Collect static files
+      working-directory: ./project_files
+      run: |
+        source ./app_env/bin/activate
+        python manage.py collectstatic
+        deactivate
     - name: Move to projects directory
       run: |
         cp -R ../Telegram-AD-Manager/* /home/kalish/projects/Telegram-AD-Manager/
