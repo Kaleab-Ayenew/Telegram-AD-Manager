@@ -17,6 +17,7 @@ def user_bot_webhook(request):
         update = request.data.get('my_chat_member')
         chat = update.get('chat')
         user = update.get('from')
+        user_id = user.get('id')
         if chat.get('type') == 'channel' and utils.get_user(user.get('id')):
             if update.get('new_chat_member') and update.get('new_chat_member').get('status') == 'administrator':
                 if utils.get_user(user_id) and not utils.get_user(user_id).feed_channel_id:
