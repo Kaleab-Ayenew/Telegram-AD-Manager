@@ -161,3 +161,8 @@ def login_view(request):
             return Response(data={"error": "Please provide valid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
     else:
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# @api_view(['POST'])
+# @permission_classes((IsEcomAdmin))
+# def fb_link_view(request):
