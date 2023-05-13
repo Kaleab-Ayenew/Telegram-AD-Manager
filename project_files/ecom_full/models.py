@@ -177,9 +177,9 @@ class Order(models.Model):
     customer_email = models.EmailField(max_length=100)
 
     payment_method = models.CharField(
-        max_length=30, choices=PAYMENT_METHOD_OPTIONS)
-    payment_status = models.CharField(
-        max_length=15, choices=PAYMENT_STATUS_OPTIONS, default='unpaid')
+        max_length=30, choices=PAYMENT_METHOD_OPTIONS, default='cash')
+    # payment_status = models.CharField(
+    #     max_length=15, choices=PAYMENT_STATUS_OPTIONS, default='unpaid')
 
     order_time = models.DateTimeField(auto_now_add=True)
 

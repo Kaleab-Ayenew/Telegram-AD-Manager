@@ -124,6 +124,11 @@ class OrderListView(generics.ListAPIView):
     queryset = Order.objects.all()
 
 
+class OrderCreateView(generics.CreateAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = []
+
+
 @api_view(['GET'])
 @permission_classes((IsEcomAdmin,))
 def get_sales_data(request):
@@ -153,7 +158,7 @@ def login_view(request):
         user = authenticate(username=uname, password=passwd)
         if user is not None:
             print(user.username, user.password)
-            token, _ = Token.objects.get_or_create()
+            token, _ = Token.objects.get_or_create(user=user)
             rsp_data = {"username": uname, "token": token.key,
                         "uid": uname, "role": "admin"}
             return Response(data=rsp_data)

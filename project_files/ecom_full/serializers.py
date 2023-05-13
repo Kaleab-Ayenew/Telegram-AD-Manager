@@ -9,7 +9,12 @@ class OrderSerializer(serializers.ModelSerializer):
     total_price = serializers.ReadOnlyField()
 
     class Meta:
-        exclude = ['order_product']
+        fields = "__all__"
+        extra_kwargs = {
+            "order_product": {
+                "write_only": True
+            }
+        }
         model = Order
 
 

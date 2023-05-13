@@ -18,4 +18,6 @@ class IsEcomAdmin(IsAuthenticated):
     message = "You don't have permission to access this data."
 
     def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
         return EcomAdmin.objects.filter(user=request.user).exists()
