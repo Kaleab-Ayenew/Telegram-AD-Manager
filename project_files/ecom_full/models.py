@@ -10,7 +10,7 @@ import time
 def get_image_path(instance, filename):
     ext = filename.split(".")[-1]
     image_id = instance.id
-    return f"neva_product_images/{instance.product.slug}/image_{image_id}.{ext}"
+    return f"neva_product_images/{instance.product.slug}/image_{time.time()}.{ext}"
 
 
 def get_social_image_path(instance, filename):
