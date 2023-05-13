@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'bot_webhooks',
     'chapa',
     'personal_feed_bot',
+    'ecom_full',
     'corsheaders',
 ]
 

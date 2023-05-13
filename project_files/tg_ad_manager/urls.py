@@ -26,6 +26,7 @@ urlpatterns = [
     path('bot-webhook/', include('bot_webhooks.urls')),
     path('chapa/', include('chapa.urls')),
     path('personal-feed-bot/', include('personal_feed_bot.urls')),
+    path('ecom_full/', include('ecom_full.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
