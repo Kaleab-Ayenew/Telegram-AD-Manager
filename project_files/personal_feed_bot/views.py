@@ -38,9 +38,7 @@ def user_bot_webhook(request):
                 #     return Response(data='Done')
 
             elif update.get('new_chat_member') and update.get('new_chat_member').get('status') == 'left':
-                user_feed_channels = [
-                    int(ch.feed_channel_id) for ch in utils.list_feed_channels(user.get('id'))]
-                if str(chat.get('id')) in user_feed_channels:
+                if utils.get_feed_channel_by_id(user.get('id'), chat.get('id')):
                     utils.remove_feed_channel(user.get('id'), chat.get('id'))
                     utils.send_message(user_id=user.get(
                         'id'), text="The bot was successfully removed from your channel.")

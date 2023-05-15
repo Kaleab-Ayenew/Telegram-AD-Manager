@@ -53,6 +53,19 @@ def add_feed_channel(user_id, id, name, username):
     return new_feed_channel
 
 
+def get_feed_channel_by_id(user_id, ch_id):
+    user_id = str(user_id)
+    ch_id = str(ch_id)
+    bot_user = BotUser.objects.get(user_id=user_id)
+
+    try:
+        feed_channel = FeedChannel.objects.get(
+            owner_user=bot_user, feed_channel_id=ch_id)
+        return feed_channel
+    except FeedChannel.DoesNotExist:
+        return None
+
+
 def get_feed_channel_by_name(user_id, ch_name):
     bot_user = BotUser.objects.get(user_id=user_id)
     try:
