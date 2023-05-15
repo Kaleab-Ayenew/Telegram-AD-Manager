@@ -133,13 +133,14 @@ class OrderCreateView(generics.CreateAPIView):
 @permission_classes((IsEcomAdmin,))
 def get_sales_data(request):
     past_hr = timezone.now() - datetime.timedelta(hours=2)
-    this_hr_orders = Order.objects.filter(order_time__gte=past_hr)
-    all_orders = len(Order.objects.all())
-    total_sales = this_hr_orders.aggregate(Sum('total_price'))[
+    # this_hr_orders = Order.objects.filter(order_time__gte=past_hr)
+
+    all_orders = Order.objects.all()
+    total_sales = all_orders.aggregate(Sum('total_price'))[
         'total_price__sum']
-    total_orders = len(this_hr_orders)
+    total_orders = len(all_orders)
     rsp_data = {'total_sales': total_sales,
-                'total_orders': total_orders, 'all_orders': all_orders}
+                'total_orders': total_orders, 'all_orders': len(all_orders)}
     # for order in this_hr_orders:
     #     json_data = OrderSerializer(order).data
     #     json_data.update({'minute': order.order_time.minute})
