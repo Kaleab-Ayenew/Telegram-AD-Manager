@@ -3,6 +3,7 @@ from .models import Product, ProductImage, Discount, Review, Order
 from django.utils import timezone
 from datetime import timedelta
 from statistics import mean
+from html2text import html2text
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -39,6 +40,8 @@ class ProductSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
 
+        desc = html2text(data.get('desc'))
+
         orders = instance.orders.all()
         month_ago = timezone.now() - timedelta(days=30)
         past_month_orders = instance.orders.filter(order_time__gte=month_ago)
@@ -54,7 +57,8 @@ class ProductSerializer(serializers.ModelSerializer):
         rating_score = mean(
             [r.review_score for r in instance.reviews.all()]) if instance.reviews.all() else 0
         data.update({'best_sell': best_sell, 'trending': trending,
-                    'total_sold': total_sold, 'rating_no': rating_no, 'rating_score': rating_score, "is_new": is_new})
+                    'total_sold': total_sold, 'rating_no': rating_no,
+                     'rating_score': rating_score, "is_new": is_new, "desc": desc})
         return data
 
     class Meta:
