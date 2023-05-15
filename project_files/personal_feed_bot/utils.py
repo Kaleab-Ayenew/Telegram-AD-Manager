@@ -177,3 +177,18 @@ def list_to_button(l, i=0):
     button_list.append([{'text': 'Back to Home'}])
 
     return button_list
+
+
+def normal_list_to_button(l, i=0):
+    list_10 = split_list(l, 10)
+    if (i+1) > len(list_10) or i < 0:
+        i = 0
+
+    button_list = []
+    cut_list = list_10[i]
+    _ = split_list(cut_list, 2)
+
+    for b in _:
+        btn = [{'text': t} for t in b]
+        button_list.append(btn)
+    return button_list

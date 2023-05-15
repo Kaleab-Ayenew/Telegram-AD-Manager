@@ -76,7 +76,7 @@ def user_bot_webhook(request):
                     active_question = "Choose a feed channel:"
                     user_feed_channels = [
                         ch.feed_channel_name for ch in utils.list_feed_channels(user_id)]
-                    buttons = utils.list_to_button(user_feed_channels)
+                    buttons = utils.normal_list_to_button(user_feed_channels)
                     utils.send_message(
                         user_id, active_question, buttons)
 
@@ -140,6 +140,7 @@ def user_bot_webhook(request):
                         if utils.get_feed_channel_by_name(user_id, message):
                             temp_data.data = utils.get_feed_channel_by_name(
                                 user_id, message).feed_channel_id
+                            temp_data.active_question = temp_data.active_question + 1
                             temp_data.save()
                             utils.send_message(
                                 user_id, "Send the username of the channel you want to add to your feed.\nExample: `tikvahethiopia`")
@@ -213,11 +214,6 @@ def user_bot_webhook(request):
                             utils.send_message(
                                 user_id, 'No channels to remove', buttons=data.BUTTON_LIST[0])
                             return Response(data='Done')
-                    else:
-                        utils.send_message(
-                            user_id, 'Welcome to FeedGram ETH bot!\nWhat do you want to do?', buttons=data.BUTTON_LIST[0])
-                        temp_data.delete()
-                        return Response(data='Done')
 
                     ###########################
                     ###### Delete Channel #####
@@ -232,6 +228,7 @@ def user_bot_webhook(request):
                             user_id, "This channel doesn't exist.", buttons=data.BUTTON_LIST[0])
                         temp_data.delete()
                         return Response(data='Done')
+
                     ##########################
 
                 # LIST_CHANNEL: If the user wants to list a channels
