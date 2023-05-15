@@ -1,7 +1,7 @@
 import requests
 from django.conf import settings
 from modules.global_utils.utils import BotMessage, bot_request
-from .models import BotUser, ConnectedChannels, TempData
+from .models import BotUser, ConnectedChannels, TempData, FeedChannel
 from more_itertools import batched
 
 proxy = None if settings.PROD else {
@@ -47,28 +47,43 @@ def get_user(user_id):
 def add_feed_channel(user_id, id, name, username):
 
     bot_user = BotUser.objects.get(user_id=user_id)
-    bot_user.feed_channel_id = id
-    bot_user.feed_channel_name = name
-    bot_user.feed_channel_username = username
-    bot_user.save()
-    return bot_user
+    new_feed_channel = FeedChannel.objects.create(
+        owner_user=bot_user, feed_channel_id=id, feed_channel_name=name, feed_channel_username=username)
+
+    return new_feed_channel
 
 
-def remove_feed_channel(user_id):
-
+def get_feed_channel_by_name(user_id, ch_name):
     bot_user = BotUser.objects.get(user_id=user_id)
-    bot_user.feed_channel_id = None
-    bot_user.feed_channel_name = None
-    bot_user.feed_channel_username = None
-    bot_user.save()
-    return bot_user
+    try:
+        feed_channel = FeedChannel.objects.get(
+            owner_user=bot_user, feed_channel_name=ch_name)
+        return feed_channel
+    except FeedChannel.DoesNotExist:
+        return None
 
 
-def add_connected_channel(user_id, channel_username):
+def list_feed_channels(user_id):
+    bot_user = BotUser.objects.get(user_id=user_id)
+    feed_channels = FeedChannel.objects.filter(owner_user=bot_user)
+    return list(feed_channels)
+
+
+def remove_feed_channel(user_id, ch_id):
+    ch_id = str(ch_id)
+    bot_user = BotUser.objects.get(user_id=user_id)
+    feed_channel = FeedChannel.objects.get(
+        owner_user=bot_user, feed_channel_id=ch_id)
+    feed_channel.delete()
+    # return bot_user
+
+
+def add_connected_channel(user_id, feed_ch_id, channel_username):
 
     owner_user = BotUser.objects.get(user_id=user_id)
+    feed_ch = FeedChannel.objects.get(feed_channel_id=feed_ch_id)
     connection = ConnectedChannels.objects.create(
-        owner_user=owner_user, channel_username=channel_username)
+        owner_user=owner_user, channel_username=channel_username, feed_channel=feed_ch)
     connection.save()
     return connection
 

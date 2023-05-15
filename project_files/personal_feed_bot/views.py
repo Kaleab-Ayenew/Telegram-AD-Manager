@@ -20,22 +20,28 @@ def user_bot_webhook(request):
         user_id = user.get('id')
         if chat.get('type') == 'channel' and utils.get_user(user.get('id')):
             if update.get('new_chat_member') and update.get('new_chat_member').get('status') == 'administrator':
-                if utils.get_user(user_id) and not utils.get_user(user_id).feed_channel_id:
+                # if utils.get_user(user_id) and not utils.get_user(user_id).feed_channel_id:
+                if utils.get_user(user_id):
                     utils.add_feed_channel(user.get('id'), chat.get(
                         'id'), chat.get('title'), chat.get('username'))
                     buttons = data.BUTTON_LIST[0]
                     utils.send_message(user_id=user.get(
                         'id'), text="The bot was successfully added to your channel.", buttons=buttons)
                     return Response(data='Done')
-                elif utils.get_user(user_id) and utils.get_user(user_id).feed_channel_id:
-                    utils.send_message(user_id=user.get(
-                        'id'), text="Sorry, you cannot add more than one channel.", buttons=buttons)
+                else:
                     return Response(data='Done')
 
+                # elif utils.get_user(user_id) and utils.get_user(user_id).feed_channel_id:
+                #     buttons = data.BUTTON_LIST[0]
+                #     utils.send_message(user_id=user.get(
+                #         'id'), text="Sorry, you cannot add more than one channel.", buttons=buttons)
+                #     return Response(data='Done')
+
             elif update.get('new_chat_member') and update.get('new_chat_member').get('status') == 'left':
-                user_object = utils.get_user(user.get('id'))
-                if user_object.feed_channel_id == str(chat.get('id')):
-                    utils.remove_feed_channel(user.get('id'))
+                user_feed_channels = [
+                    int(ch.feed_channel_id) for ch in utils.list_feed_channels(user.get('id'))]
+                if str(chat.get('id')) in user_feed_channels:
+                    utils.remove_feed_channel(user.get('id'), chat.get('id'))
                     utils.send_message(user_id=user.get(
                         'id'), text="The bot was successfully removed from your channel.")
                     return Response(data='Done')
@@ -53,23 +59,26 @@ def user_bot_webhook(request):
             return Response(data='Done')
 
         # If the user didn't add a channel
-        if not utils.get_user(user_id).feed_channel_id:
+        if not utils.list_feed_channels(user_id):
             text = "Please create a new channel and add this bot as an admin!"
             utils.send_message(user_id, text)
             return Response(data='Done')
 
-        if utils.get_user(user_id) and utils.get_user(user_id).feed_channel_id:
+        if utils.get_user(user_id) and utils.list_feed_channels(user_id):
 
             if not utils.get_temp_data(user_id):
 
-                ##########################
+                #######################
                 #### ADD A CHANNEL ####
                 if message == 'Add Channels':
                     temp_data = utils.create_temp_data(
                         user_id, form_name='add_channel')
-                    active_question = data.ADD_CHANNEL_FORM[temp_data.active_question]
+                    active_question = "Choose a feed channel:"
+                    user_feed_channels = [
+                        ch.feed_channel_name for ch in utils.list_feed_channels(user_id)]
+                    buttons = utils.list_to_button(user_feed_channels)
                     utils.send_message(
-                        user_id, active_question)
+                        user_id, active_question, buttons)
 
                 ##########################
                 #### LIST CHANNELS ####
@@ -128,6 +137,20 @@ def user_bot_webhook(request):
                 if temp_data.form_name == 'add_channel':
 
                     if temp_data.active_question == 0:
+                        if utils.get_feed_channel_by_name(user_id, message):
+                            temp_data.data = utils.get_feed_channel_by_name(
+                                user_id, message).feed_channel_id
+                            temp_data.save()
+                            utils.send_message(
+                                user_id, "Send the username of the channel you want to add to your feed.\nExample: `tikvahethiopia`")
+                            return Response(data='Done')
+                        else:
+                            utils.send_message(
+                                user_id, "This channel is not in your feed.", buttons=data.BUTTON_LIST[0])
+                            temp_data.delete()
+                            return Response(data="Done")
+
+                    if temp_data.active_question == 1:
 
                         if utils.get_connected_channel(user_id, message):
                             utils.send_message(
@@ -136,10 +159,12 @@ def user_bot_webhook(request):
                             return Response(data='Done')
 
                         if utils.check_channel(message):
-                            utils.add_connected_channel(user_id, message)
+                            feed_ch_id = str(temp_data.data)
+                            utils.add_connected_channel(
+                                user_id, feed_ch_id, message)
                             buttons = data.BUTTON_LIST[0]
                             utils.send_message(
-                                user_id, "A new channel was succesfully added.", buttons=buttons)
+                                user_id, f"A new channel was succesfully added to channel: {feed_ch_id}", buttons=buttons)
                             temp_data.delete()
                             return Response(data='Done')
 
@@ -188,6 +213,11 @@ def user_bot_webhook(request):
                             utils.send_message(
                                 user_id, 'No channels to remove', buttons=data.BUTTON_LIST[0])
                             return Response(data='Done')
+                    else:
+                        utils.send_message(
+                            user_id, 'Welcome to FeedGram ETH bot!\nWhat do you want to do?', buttons=data.BUTTON_LIST[0])
+                        temp_data.delete()
+                        return Response(data='Done')
 
                     ###########################
                     ###### Delete Channel #####
@@ -240,5 +270,15 @@ def user_bot_webhook(request):
                             utils.send_message(
                                 user_id, 'No channels to show', buttons=data.BUTTON_LIST[0])
                             return Response(data='Done')
+                    else:
+                        utils.send_message(
+                            user_id, 'Welcome to FeedGram ETH bot!\nWhat do you want to do?', buttons=data.BUTTON_LIST[0])
+                        temp_data.delete()
+                        return Response(data='Done')
+                else:
+                    utils.send_message(
+                        user_id, 'Welcome to FeedGram ETH bot!\nWhat do you want to do?', buttons=data.BUTTON_LIST[0])
+                    temp_data.delete()
+                    return Response(data='Done')
 
     return Response(data='Done')
