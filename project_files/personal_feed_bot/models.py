@@ -41,7 +41,7 @@ class ConnectedChannels(models.Model):
         return f"{self.owner_user.user_first_name} | {self.feed_channel.feed_channel_name} - {self.channel_username}"
 
     class Meta:
-        unique_together = ('owner_user', 'channel_username',)
+        unique_together = ('owner_user', 'channel_username', 'feed_channel')
 
 
 class TempData(models.Model):
