@@ -9,13 +9,20 @@ from html2text import html2text
 class OrderSerializer(serializers.ModelSerializer):
     total_price = serializers.ReadOnlyField()
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        product_name = Product.objects.get(slug=data.get("order_product"))
+        # data.update({"order_product_slug": data.get("order_product")})
+        data.update({"order_product": str(product_name)})
+        return data
+
     class Meta:
         fields = "__all__"
-        extra_kwargs = {
-            "order_product": {
-                "write_only": True
-            }
-        }
+        # extra_kwargs = {
+        #     "order_product": {
+        #         "write_only": True
+        #     }
+        # }
         model = Order
 
 
