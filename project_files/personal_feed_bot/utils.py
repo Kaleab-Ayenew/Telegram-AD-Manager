@@ -88,11 +88,15 @@ def add_connected_channel(user_id, feed_ch_id, channel_username):
     return connection
 
 
-def get_connected_channel(user_id, channel_username):
+def get_connected_channel(user_id, channel_username, feed_channel_id=None):
     owner_user = BotUser.objects.get(user_id=user_id)
     try:
-        connection = ConnectedChannels.objects.get(
-            owner_user=owner_user, channel_username=channel_username)
+        if feed_channel_id:
+            connection = ConnectedChannels.objects.get(
+                owner_user=owner_user, channel_username=channel_username, feed_channel_id=feed_channel_id)
+        else:
+            connection = ConnectedChannels.objects.get(
+                owner_user=owner_user, channel_username=channel_username)
         return connection
     except ConnectedChannels.DoesNotExist:
         return None

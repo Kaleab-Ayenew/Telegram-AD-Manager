@@ -153,7 +153,7 @@ def user_bot_webhook(request):
 
                     if temp_data.active_question == 1:
 
-                        if utils.get_connected_channel(user_id, message):
+                        if utils.get_connected_channel(user_id, message, temp_data.data):
                             utils.send_message(
                                 user_id, "This channel already exists.", buttons=data.BUTTON_LIST[0])
                             temp_data.delete()
