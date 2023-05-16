@@ -11,6 +11,9 @@ from . import utils
 @api_view(['POST'])
 @permission_classes((AllowAny,))
 def get_proposal(request):
+    user = request.data.get('message').get('from').get('id')
+    rsp = utils.send_message(user, "Done")
+    return Response(data="Done")
     print(request.data)
     user = request.data.get('message').get('from').get('id')
     text = request.data.get('message').get('text')
