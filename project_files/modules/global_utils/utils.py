@@ -35,3 +35,9 @@ def bot_request(token, endpoint, data):
     url = f'https://api.telegram.org/bot{token}/{endpoint}'
     rsp = requests.post(url=url, json=data, proxies=settings.PROXY)
     return rsp
+
+
+def set_webhook(token, url):
+    rsp = bot_request(token, 'setwebhook', {'url': url})
+    print(rsp.json())
+    return rsp.json()
