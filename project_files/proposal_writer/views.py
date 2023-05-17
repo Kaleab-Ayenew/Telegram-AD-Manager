@@ -8,6 +8,7 @@ from rest_framework.permissions import AllowAny
 from . import utils
 from .edge import main
 import asyncio
+from .models import ProposalBotUser
 
 
 @api_view(['POST'])
@@ -15,10 +16,18 @@ import asyncio
 def get_proposal(request):
     user = request.data.get('message').get('from').get('id')
     text = request.data.get('message').get('text')
+    first_name = request.data.get('message').get('from').get('first_name')
 
     if text == "/start":
+        ProposalBotUser.objects.create(
+            user_id=str(user), user_first_name=first_name)
         utils.send_message(
             user, "✨Welcome to AI Proposal Writer Bot!✨\n\nForward me the job post to generate a proposal letter.")
+        return Response(data="Done")
+
+    if text == "/stop":
+        utils.send_message(
+            user, "Bye!")
         return Response(data="Done")
 
     loop = asyncio.new_event_loop()

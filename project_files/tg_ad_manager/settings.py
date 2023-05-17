@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'chapa',
     'personal_feed_bot',
     'ecom_full',
+    'proposal_writer',
     'corsheaders',
 ]
 
