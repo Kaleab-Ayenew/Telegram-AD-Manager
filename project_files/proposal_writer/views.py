@@ -18,6 +18,9 @@ def get_proposal(request):
     text = request.data.get('message').get('text')
     first_name = request.data.get('message').get('from').get('first_name')
 
+    utils.send_message(
+        user, "🤖 The bot is under maintenance.")
+    return Response(data='Done')
     if text == "/start":
         ProposalBotUser.objects.create(
             user_id=str(user), user_first_name=first_name)
