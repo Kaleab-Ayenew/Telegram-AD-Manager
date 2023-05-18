@@ -13,7 +13,7 @@ def post_to_telegram(instance):
     data = {
         "chat_id": channel_uname,
         "caption": instance.title+"\n\n"+html2text(instance.desc),
-
+        "photo": f"https://ubuntu-vps.kal-dev.com/media/{instance.social_image.__str__()}"
     }
 
     print(data)
