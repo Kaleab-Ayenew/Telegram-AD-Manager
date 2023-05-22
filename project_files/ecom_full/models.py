@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from uuid import uuid4
 import time
+import os
+from pathlib import Path
 # Create your models here.
 
 
@@ -16,6 +18,17 @@ def get_image_path(instance, filename):
 def get_social_image_path(instance, filename):
     ext = filename.split(".")[-1]
     return f"neva_product_images/{instance.slug}/social_image/image_{int(time.time())}.{ext}"
+
+
+def _delete_file(path):
+    """ Deletes file from filesystem. """
+    if os.path.isfile(path):
+        os.remove(path)
+
+
+def _remove_path(path):
+    p = Path(path)
+    os.rmdir(p.parent.absolute())
 
 
 class Product(models.Model):
@@ -113,6 +126,21 @@ class Product(models.Model):
         self.slug = "-".join(self.title.lower().split(" ")
                              ) + "-" + str(self.unique_id)
         super(Product, self).save(*args, **kwargs)
+
+    def delete(self):
+        images = self.images.all()
+
+        if self.social_image:
+            _delete_file(self.social_image.path)
+            _remove_path(self.social_image.path)
+
+        for image in images:
+            _delete_file(image.img.path)
+        _remove_path(image.img.path)
+        # image.img.delete()
+
+        # self.social_image.delete()
+        super(Product, self).delete()
 
     def __str__(self):
         return self.title

@@ -7,9 +7,9 @@ def post_to_telegram(instance):
     bot_token = "5829938501:AAGSHepafdqsLwF0MsmhHCI_JSQBMX8oQ9U"
     channel_uname = "@blackstorm_pc_shop"
     url = f"https://api.telegram.org/bot{bot_token}/sendphoto"
-    photo = io.BytesIO(instance.social_image.read())
-    files = {"photo": photo}
-    print(photo, "This is the photo")
+    # photo = io.BytesIO(instance.social_image.read())
+    # files = {"photo": photo}
+    # print(photo, "This is the photo")
     data = {
         "chat_id": channel_uname,
         "caption": instance.title+"\n\n"+html2text(instance.desc),
@@ -17,7 +17,7 @@ def post_to_telegram(instance):
     }
 
     print(data)
-    rsp = requests.post(url=url, data=data, files=files)
+    rsp = requests.post(url=url, data=data)
     print(rsp.json())
 
 

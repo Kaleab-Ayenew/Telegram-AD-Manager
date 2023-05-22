@@ -55,16 +55,17 @@ def get_proposal_prompt(job):
     return prompt
 
 
-def get_split_prompt(split_job):
+def get_split_prompt(job):
+    split_job_sent = split_job(job)
     prompt_1 = f"""
     Here is a job posting for a position that I want to apply for. I have attached the first part here. Next you will ask me for the second part, and I will send it to you.
     ***
-    {split_job[0]}
+    {split_job_sent[0]}
     ***
     """
     prompt_2 = f"""
     ***
-    {split_job[1]}
+    {split_job_sent[1]}
     ***
     
     I have been asked to do the following by the recruiter to do the following:

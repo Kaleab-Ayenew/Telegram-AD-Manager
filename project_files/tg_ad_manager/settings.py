@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'personal_feed_bot',
     'ecom_full',
     'proposal_writer',
+    'social_manager',
     'corsheaders',
 ]
 
