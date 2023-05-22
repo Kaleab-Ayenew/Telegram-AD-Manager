@@ -28,7 +28,8 @@ urlpatterns = [
     path('personal-feed-bot/', include('personal_feed_bot.urls')),
     path('ecom_full/', include('ecom_full.urls')),
     path('proposal-writer-bot/', include('proposal_writer.urls')),
-    path('social-manager/', include('social_manager.urls'))
+    path('social-manager/', include('social_manager.urls')),
+    path('link/', include('link_shortner.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

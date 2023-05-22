@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'ecom_full',
     'proposal_writer',
     'social_manager',
+    'link_shortner',
     'corsheaders',
 ]
 
