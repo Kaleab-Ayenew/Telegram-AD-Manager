@@ -10,11 +10,15 @@ class BotMessage():
         self.user = user
         self.message = message
         self.reply_markup = None
+        self.parse_mode = parse_mode
         self.proxy = None if settings.PROD else {
             'http': 'http://127.0.0.1:6666', 'https': 'http://127.0.0.1:6666'}
 
     def to_dict(self):
         self.final_data = {'chat_id': self.user, 'text': self.message}
+        if self.parse_mode:
+            self.final_data.update(
+                {'parse_mode': self.parse_mode})
         if self.reply_markup:
             self.final_data.update({'reply_markup': self.reply_markup})
         return self.final_data

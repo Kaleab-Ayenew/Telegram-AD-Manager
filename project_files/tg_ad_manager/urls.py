@@ -30,6 +30,7 @@ urlpatterns = [
     path('proposal-writer-bot/', include('proposal_writer.urls')),
     path('social-manager/', include('social_manager.urls')),
     path('link/', include('link_shortner.urls')),
+    path('neva-bot/', include('neva_bot.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'proposal_writer',
     'social_manager',
     'link_shortner',
+    'neva_bot',
     'corsheaders',
 ]
 
@@ -187,3 +188,11 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 PROXY = None if PROD else {
     'http': 'http://127.0.0.1:6666', 'https': 'http://127.0.0.1:6666'}
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'kalishayish16@gmail.com'
+EMAIL_HOST_PASSWORD = 'wgosrtcfibczynzm'
