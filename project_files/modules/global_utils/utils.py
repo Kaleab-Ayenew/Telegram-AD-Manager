@@ -35,6 +35,15 @@ class BotMessage():
         return rsp
 
 
+def send_message(user_id, text, bot_token, buttons=None):
+    user_id = user_id
+    message = BotMessage(user=user_id, message=text)
+    if buttons:
+        message.add_keyboard(keyboard_type='keyboard', data_array=buttons)
+    rsp = message.send(bot_token)
+    print(rsp.json())
+
+
 def bot_request(token, endpoint, data):
     url = f'https://api.telegram.org/bot{token}/{endpoint}'
     rsp = requests.post(url=url, json=data, proxies=settings.PROXY)

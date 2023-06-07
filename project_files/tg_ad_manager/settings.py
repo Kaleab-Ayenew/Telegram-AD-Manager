@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'social_manager',
     'link_shortner',
     'neva_bot',
+    'bot_subscription',
     'corsheaders',
 ]
 
@@ -196,3 +197,6 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'kalishayish16@gmail.com'
 EMAIL_HOST_PASSWORD = 'wgosrtcfibczynzm'
+
+
+HOST_URL = "https://a8b1-197-156-107-36.ngrok-free.app/" if not PROD else "https://ubuntu-vps.kal-dev.com/"

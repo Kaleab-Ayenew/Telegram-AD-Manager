@@ -2,6 +2,7 @@ import requests
 from django.conf import settings
 from modules.global_utils.utils import BotMessage, bot_request
 from .models import BotUser, ConnectedChannels, TempData, FeedChannel
+from bot_subscription.models import FeedgramSubscription, FeedgramFeature
 from more_itertools import batched
 
 proxy = None if settings.PROD else {
@@ -31,7 +32,7 @@ def create_user(user_id, first_name):
 
     new_user = BotUser.objects.create(
         user_id=user_id, user_first_name=first_name)
-    new_user.save()
+
     return new_user
 
 
@@ -142,6 +143,7 @@ def create_temp_data(user_id, form_name):
 
 
 def get_temp_data(user_id):
+
     try:
         temp_data = TempData.objects.get(active_user=user_id)
         return temp_data
@@ -156,6 +158,7 @@ def remove_temp_data(user_id):
 
 def check_channel(username):
     username = "@" + username if username[0] != "@" else username
+
     rsp = bot_request(BOT_TOKEN, 'getchat', {'chat_id': username})
     if rsp.status_code == 200:
         return True
@@ -209,3 +212,35 @@ def normal_list_to_button(l, i=0):
         btn = [{'text': t} for t in b]
         button_list.append(btn)
     return button_list
+
+
+def check_feed_limit(chat_id):
+
+    chat_id = str(chat_id)
+    bot_user = get_user(chat_id=chat_id)
+    feed_channels = FeedChannel.objects.filter(owner_user=bot_user)
+
+    try:
+        user_sub = bot_user.subscription
+        sub_level = user_sub.sub_level
+    except BotUser.subscription.RelatedObjectDoesNotExist:
+        sub_level = FeedgramFeature.objects.get(sub_name='free')
+
+    return len(feed_channels) < sub_level.super_channels
+
+
+def check_connection_limit(chat_id, feed_ch_id):
+
+    chat_id = str(chat_id)
+    bot_user = get_user(chat_id=chat_id)
+    feed_channel = get_feed_channel_by_id(feed_ch_id)
+    connected_channels = ConnectedChannels.objects.filter(
+        owner_user=bot_user, feed_channel=feed_channel)
+
+    try:
+        user_sub = bot_user.subscription
+        sub_level = user_sub.sub_level
+    except BotUser.subscription.RelatedObjectDoesNotExist:
+        sub_level = FeedgramFeature.objects.get(sub_name='free')
+
+    return len(connected_channels) < sub_level.channel_per_superchannel

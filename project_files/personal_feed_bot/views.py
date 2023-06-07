@@ -21,12 +21,19 @@ def user_bot_webhook(request):
             if update.get('new_chat_member') and update.get('new_chat_member').get('status') == 'administrator':
                 # if utils.get_user(user_id) and not utils.get_user(user_id).feed_channel_id:
                 if utils.get_user(user_id):
-                    utils.add_feed_channel(user.get('id'), chat.get(
-                        'id'), chat.get('title'), chat.get('username'))
-                    buttons = data.BUTTON_LIST[0]
-                    utils.send_message(user_id=user.get(
-                        'id'), text="The bot was successfully added to your channel.", buttons=buttons)
-                    return Response(data='Done')
+
+                    if utils.check_feed_limit(user_id):
+
+                        new_ch = utils.add_feed_channel(user.get('id'), chat.get(
+                            'id'), chat.get('title'), chat.get('username'))
+                        buttons = data.BUTTON_LIST[0]
+                        utils.send_message(user_id=user.get(
+                            'id'), text=f"The bot was successfully added to channel: {new_ch.feed_channel_name}", buttons=buttons)
+                        return Response(data='Done')
+                    else:
+                        utils.send_message(
+                            user_id=user_id, text=f"You have passed maximum super_channel limit.")
+                        return Response(data='Done')
                 else:
                     return Response(data='Done')
 
@@ -135,13 +142,24 @@ def user_bot_webhook(request):
 
                     if temp_data.active_question == 0:
                         if utils.get_feed_channel_by_name(user_id, message):
-                            temp_data.data = utils.get_feed_channel_by_name(
+                            _feed_ch_id = utils.get_feed_channel_by_name(
                                 user_id, message).feed_channel_id
-                            temp_data.active_question = temp_data.active_question + 1
-                            temp_data.save()
-                            utils.send_message(
-                                user_id, "Send the username of the channel you want to add to your feed.\nExample: `tikvahethiopia`")
-                            return Response(data='Done')
+                            if utils.check_connection_limit(user_id, _feed_ch_id):
+
+                                temp_data.data = utils.get_feed_channel_by_name(
+                                    user_id, message).feed_channel_id
+                                temp_data.active_question = temp_data.active_question + 1
+                                temp_data.save()
+                                utils.send_message(
+                                    user_id, "Send the username of the channel you want to add to your feed.\nExample: `tikvahethiopia`")
+                                return Response(data='Done')
+                            else:
+                                _feed_ch_name = utils.get_feed_channel_by_name(
+                                    user_id, message).feed_channel_name
+                                utils.send_message(
+                                    user_id, f"You have passed maximum channel limit for super_channel -> [{_feed_ch_name}]", buttons=data.BUTTON_LIST[0])
+                                temp_data.delete()
+                                return Response(data="Done")
                         else:
                             utils.send_message(
                                 user_id, "This channel is not in your feed.", buttons=data.BUTTON_LIST[0])
