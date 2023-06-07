@@ -4,6 +4,7 @@ from modules.global_utils.utils import BotMessage, bot_request
 from .models import BotUser, ConnectedChannels, TempData, FeedChannel
 from bot_subscription.models import FeedgramSubscription, FeedgramFeature
 from more_itertools import batched
+from . import data
 
 proxy = None if settings.PROD else {
     'http': 'http://127.0.0.1:6666', 'https': 'http://127.0.0.1:6666'}
@@ -21,10 +22,23 @@ def ping(user_id, first_name):
 
 def send_message(user_id, text, buttons=None):
     user_id = user_id
-    message = BotMessage(user=user_id, message=text)
+    message = BotMessage(user=user_id, message=text, parse_mode='html')
     if buttons:
         message.add_keyboard(keyboard_type='keyboard', data_array=buttons)
     rsp = message.send(BOT_TOKEN)
+    print(rsp.json())
+
+
+def send_image(user_id, text, image_url, buttons=None, inline_buttons=None):
+    user_id = user_id
+    message = BotMessage(user=user_id, message=text,
+                         image_url=image_url, parse_mode='html')
+    if buttons:
+        message.add_keyboard(keyboard_type='keyboard', data_array=buttons)
+    if inline_buttons:
+        message.add_keyboard(keyboard_type='inline_keyboard',
+                             data_array=inline_buttons)
+    rsp = message.send_image(BOT_TOKEN)
     print(rsp.json())
 
 
@@ -217,14 +231,18 @@ def normal_list_to_button(l, i=0):
 def check_feed_limit(chat_id):
 
     chat_id = str(chat_id)
-    bot_user = get_user(chat_id=chat_id)
+    bot_user = get_user(user_id=chat_id)
     feed_channels = FeedChannel.objects.filter(owner_user=bot_user)
+
+    print("Feed Channels: ", len(feed_channels))
 
     try:
         user_sub = bot_user.subscription
         sub_level = user_sub.sub_level
     except BotUser.subscription.RelatedObjectDoesNotExist:
         sub_level = FeedgramFeature.objects.get(sub_name='free')
+
+    print("Allowed Channels: ", sub_level.super_channels)
 
     return len(feed_channels) < sub_level.super_channels
 
@@ -232,10 +250,12 @@ def check_feed_limit(chat_id):
 def check_connection_limit(chat_id, feed_ch_id):
 
     chat_id = str(chat_id)
-    bot_user = get_user(chat_id=chat_id)
-    feed_channel = get_feed_channel_by_id(feed_ch_id)
+    bot_user = get_user(user_id=chat_id)
+    feed_channel = get_feed_channel_by_id(chat_id, feed_ch_id)
     connected_channels = ConnectedChannels.objects.filter(
         owner_user=bot_user, feed_channel=feed_channel)
+
+    print("Connected Channels: ", len(connected_channels))
 
     try:
         user_sub = bot_user.subscription
@@ -243,4 +263,34 @@ def check_connection_limit(chat_id, feed_ch_id):
     except BotUser.subscription.RelatedObjectDoesNotExist:
         sub_level = FeedgramFeature.objects.get(sub_name='free')
 
+    print("Allowed Channels: ", sub_level.channel_per_superchannel)
+
     return len(connected_channels) < sub_level.channel_per_superchannel
+
+
+def send_subscription_info(chat_id):
+    features = FeedgramFeature.objects.all()
+    content = [f"# {f.invoice_title}\n\n{f.invoice_desc}" for f in features]
+    content = "\n\n".join(content)
+
+    text = f"<b>Subscription Plans</b>:\n\n{content}"
+    btns = data.SUB_BUTTONS
+    send_message(user_id=chat_id, text=text, buttons=btns)
+
+
+def send_subscription(chat_id, sub_level):
+    sub = FeedgramFeature.objects.get(sub_name=sub_level)
+    monthly_url = f"https://t.me/blackstorm_sub_bot?start=feedgram-{sub_level}-monthly"
+    yearly_url = f"https://t.me/blackstorm_sub_bot?start=feedgram-{sub_level}-yearly"
+    image_url = settings.HOST_URL + 'media/' + str(sub.poster_image)
+    text = f"{sub.invoice_title}\n\n{sub.invoice_desc}\n\n"
+    monthly_price = sub.price
+    yearly_price = sub.price * 10
+    btns = [
+        [{'text': f'Buy Monthly ({monthly_price} birr/month)', 'url': monthly_url},
+         {'text': f'Buy Yearly ({yearly_price} birr/year)', 'url': yearly_url}]
+    ]
+    print("This is text", text)
+
+    send_image(user_id=chat_id, text=text,
+               image_url=image_url, inline_buttons=btns)

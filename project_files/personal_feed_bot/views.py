@@ -72,6 +72,11 @@ def user_bot_webhook(request):
 
             if not utils.get_temp_data(user_id):
 
+                if message == 'Back to Home':
+                    utils.send_message(
+                        user_id, 'Welcome to FeedGram ETH bot!\nWhat do you want to do?', buttons=data.BUTTON_LIST[0])
+                    return Response(data='Done')
+
                 #######################
                 #### ADD A CHANNEL ####
                 if message == 'Add Channels':
@@ -127,6 +132,18 @@ def user_bot_webhook(request):
                             user_id, 'No channels to remove [1]', buttons=data.BUTTON_LIST[0])
                         temp_data.delete()
                         return Response(data='Done')
+
+                elif message == 'See Subscriptions':
+                    utils.send_subscription_info(user_id)
+                    return Response(data='Done')
+
+                elif message == 'Get Basic Plan':
+                    utils.send_subscription(user_id, 'basic')
+                    return Response(data='Done')
+
+                elif message == 'Get Advanced Plan':
+                    utils.send_subscription(user_id, 'advanced')
+                    return Response(data='Done')
 
             else:
                 temp_data = utils.get_temp_data(user_id)

@@ -6,16 +6,21 @@ class BotMessage():
     proxy = None if settings.PROD else {
         'http': 'http://127.0.0.1:6666', 'https': 'http://127.0.0.1:6666'}
 
-    def __init__(self, user, message, parse_mode=None):
+    def __init__(self, user, message, image_url=None, parse_mode=None):
         self.user = user
         self.message = message
         self.reply_markup = None
         self.parse_mode = parse_mode
+        self.image_url = image_url
         self.proxy = None if settings.PROD else {
             'http': 'http://127.0.0.1:6666', 'https': 'http://127.0.0.1:6666'}
 
     def to_dict(self):
-        self.final_data = {'chat_id': self.user, 'text': self.message}
+        if self.image_url:
+            self.final_data = {'chat_id': self.user,
+                               'caption': self.message, 'photo': self.image_url}
+        else:
+            self.final_data = {'chat_id': self.user, 'text': self.message}
         if self.parse_mode:
             self.final_data.update(
                 {'parse_mode': self.parse_mode})
@@ -31,6 +36,13 @@ class BotMessage():
     def send(self, bot_token):
         url = f'https://api.telegram.org/bot{bot_token}/sendmessage'
         data = self.to_dict()
+        rsp = requests.post(url=url, json=data, proxies=self.proxy)
+        return rsp
+
+    def send_image(self, bot_token):
+        url = f'https://api.telegram.org/bot{bot_token}/sendphoto'
+        data = self.to_dict()
+        print("I am sending this", data)
         rsp = requests.post(url=url, json=data, proxies=self.proxy)
         return rsp
 
