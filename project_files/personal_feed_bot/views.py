@@ -32,7 +32,7 @@ def user_bot_webhook(request):
                         return Response(data='Done')
                     else:
                         utils.send_message(
-                            user_id=user_id, text=f"You have passed maximum super_channel limit.")
+                            user_id=user_id, text=f"You have passed maximum super_channel limit.\n\nUpgrade to Basic or Advanced plan to continue:\n\n", buttons=data.SEE_SUB_BUTTON)
                         return Response(data='Done')
                 else:
                     return Response(data='Done')
@@ -69,17 +69,20 @@ def user_bot_webhook(request):
             return Response(data='Done')
 
         if utils.get_user(user_id) and utils.list_feed_channels(user_id):
+            
+            
 
             if not utils.get_temp_data(user_id):
 
-                if message == 'Back to Home':
+                if message == '🏠 Back to Home 🏠' or message == '🤠 Profile Info 🤠':
+                    text = utils.get_homepage_info(user_id)
                     utils.send_message(
-                        user_id, 'Welcome to FeedGram ETH bot!\nWhat do you want to do?', buttons=data.BUTTON_LIST[0])
+                        user_id, text, buttons=data.BUTTON_LIST[0])
                     return Response(data='Done')
 
                 #######################
                 #### ADD A CHANNEL ####
-                if message == 'Add Channels':
+                if message == '🆕 Add Channels':
                     temp_data = utils.create_temp_data(
                         user_id, form_name='add_channel')
                     active_question = "Choose a feed channel:"
@@ -91,7 +94,7 @@ def user_bot_webhook(request):
 
                 ##########################
                 #### LIST CHANNELS ####
-                elif message == 'List Channels':
+                elif message == '🗒 List Channels':
                     temp_data = utils.create_temp_data(
                         user_id, form_name='list_channels')
                     channel_list = utils.list_connected_channel(user_id)
@@ -112,46 +115,38 @@ def user_bot_webhook(request):
 
                 ##########################
                 #### REMOVE A CHANNEL ####
-                elif message == 'Remove a Channel':
+                elif message == '🗑 Remove a Channel':
                     temp_data = utils.create_temp_data(
                         user_id, form_name='remove_channel')
-                    channel_list = utils.list_connected_channel(
-                        user_id)
-                    print("I was here")
 
-                    if channel_list is not None:
-                        buttons = utils.list_to_button(channel_list)
-                        print('Buttons first', buttons)
-                        print(buttons, 'There are the buttons')
-                        utils.send_message(
-                            user_id, 'Choose the channel you want to delete[1]', buttons=buttons)
-                        temp_data.save()
-                        return Response(data='Done')
-                    else:
-                        utils.send_message(
-                            user_id, 'No channels to remove [1]', buttons=data.BUTTON_LIST[0])
-                        temp_data.delete()
-                        return Response(data='Done')
+                    active_question = "Choose a Super Channel:"
+                    user_feed_channels = [
+                        ch.feed_channel_name for ch in utils.list_feed_channels(user_id)]
+                    buttons = utils.normal_list_to_button(user_feed_channels)
+                    utils.send_message(
+                        user_id, active_question, buttons)
+                    return Response(data='Done')
 
-                elif message == 'See Subscriptions':
+                elif message == '🔥 Upgrade Plan 🔥':
                     utils.send_subscription_info(user_id)
                     return Response(data='Done')
 
-                elif message == 'Get Basic Plan':
+                elif message == '⭐️ Get Basic Plan':
                     utils.send_subscription(user_id, 'basic')
                     return Response(data='Done')
 
-                elif message == 'Get Advanced Plan':
+                elif message == '🌟 Get Advanced Plan':
                     utils.send_subscription(user_id, 'advanced')
                     return Response(data='Done')
 
             else:
                 temp_data = utils.get_temp_data(user_id)
 
-                if message == 'Back to Home':
-                    utils.send_message(
-                        user_id, 'Welcome to FeedGram ETH bot!\nWhat do you want to do?', buttons=data.BUTTON_LIST[0])
+                if message == '🏠 Back to Home 🏠' or message == '🤠 Profile Info 🤠':
                     temp_data.delete()
+                    text = utils.get_homepage_info(user_id)
+                    utils.send_message(
+                        user_id, text, buttons=data.BUTTON_LIST[0])
                     return Response(data='Done')
 
                 # ADD_CHANNEL: If the user wants to add a channel
@@ -168,13 +163,13 @@ def user_bot_webhook(request):
                                 temp_data.active_question = temp_data.active_question + 1
                                 temp_data.save()
                                 utils.send_message(
-                                    user_id, "Send the username of the channel you want to add to your feed.\nExample: `tikvahethiopia`")
+                                    user_id, "❇️ Send the username of the channel you want to add to your feed.\n👉 Example: `tikvahethiopia`")
                                 return Response(data='Done')
                             else:
                                 _feed_ch_name = utils.get_feed_channel_by_name(
                                     user_id, message).feed_channel_name
                                 utils.send_message(
-                                    user_id, f"You have passed maximum channel limit for super_channel -> [{_feed_ch_name}]", buttons=data.BUTTON_LIST[0])
+                                    user_id, f"You have passed maximum channel limit for super channel: [{_feed_ch_name}]\n\nUpgrade to Basic or Advanced plan to add more channels.", buttons=data.SEE_SUB_BUTTON)
                                 temp_data.delete()
                                 return Response(data="Done")
                         else:
@@ -211,57 +206,88 @@ def user_bot_webhook(request):
                 # REMOVE_CHANNEL: If the user wants to remove a channel
                 elif temp_data.form_name == 'remove_channel':
 
-                    ###########################
-                    ###### More Channels ######
-                    if message == 'More Channels':
-                        temp_data.active_question = temp_data.active_question + 1
-                        temp_data.save()
-                        channel_list = utils.list_connected_channel(
-                            user_id)
-                        if channel_list is not None:
-                            buttons = utils.list_to_button(
-                                channel_list, temp_data.active_question)
+                    if temp_data.active_question == 0:
+
+                        if utils.get_feed_channel_by_name(user_id, message):
+                            _feed_ch_id = utils.get_feed_channel_by_name(
+                                user_id, message).feed_channel_id
+
+                            temp_data.data = _feed_ch_id
+
+                            channel_list = utils.list_connected_channel_by_feed(
+                                user_id, _feed_ch_id)
+
+                            if channel_list is not None:
+                                temp_data.active_question = temp_data.active_question + 1
+                                buttons = utils.list_to_button(channel_list)
+                                utils.send_message(
+                                    user_id, 'Choose the channel you want to delete:', buttons=buttons)
+                                temp_data.save()
+                                return Response(data='Done')
+                            else:
+                                utils.send_message(
+                                    user_id, 'No channels to remove:', buttons=data.BUTTON_LIST[0])
+                                temp_data.delete()
+                                return Response(data='Done')
+
+                        else:
                             utils.send_message(
-                                user_id, 'Choose the channel you want to delete', buttons=buttons)
+                                user_id, "This channel is not in your feed.", buttons=data.BUTTON_LIST[0])
+                            temp_data.delete()
+                            return Response(data="Done")
+
+                    elif temp_data.active_question == 1:
+
+                        ###########################
+                        ###### More Channels ######
+                        if message == 'More Channels':
+                            temp_data.active_question = temp_data.active_question + 1
+                            temp_data.save()
+                            channel_list = utils.list_connected_channel_by_feed(
+                                user_id, temp_data.data)
+                            if channel_list is not None:
+                                buttons = utils.list_to_button(
+                                    channel_list, temp_data.active_question)
+                                utils.send_message(
+                                    user_id, 'Choose the channel you want to delete', buttons=buttons)
+                                return Response(data='Done')
+                            else:
+                                utils.send_message(
+                                    user_id, 'No channels to remove', buttons=data.BUTTON_LIST[0])
+                                return Response(data='Done')
+
+                        elif message == "Previous Channels":
+                            print("I am at previous channels")
+                            temp_data.active_question = temp_data.active_question - 1
+                            temp_data.save()
+                            channel_list = utils.list_connected_channel_by_feed(
+                                user_id, temp_data.data)
+
+                            if channel_list is not None:
+                                buttons = utils.list_to_button(
+                                    channel_list, temp_data.active_question)
+                                utils.send_message(
+                                    user_id, 'Choose the channel you want to delete', buttons=buttons)
+                                return Response(data='Done')
+                            else:
+                                utils.send_message(
+                                    user_id, 'No channels to remove', buttons=data.BUTTON_LIST[0])
+                                return Response(data='Done')
+
+                        ###########################
+                        ###### Delete Channel #####
+                        if utils.get_connected_channel(user_id, message, feed_channel_id=temp_data.data):
+                            utils.remove_connected_channel(user_id, message, feed_channel_id=temp_data.data)
+                            utils.send_message(
+                                user_id, f'Channel {message} was removed succesfully.', buttons=data.BUTTON_LIST[0])
+                            temp_data.delete()
                             return Response(data='Done')
                         else:
                             utils.send_message(
-                                user_id, 'No channels to remove', buttons=data.BUTTON_LIST[0])
+                                user_id, "This channel doesn't exist.", buttons=data.BUTTON_LIST[0])
+                            temp_data.delete()
                             return Response(data='Done')
-
-                    elif message == "Previous Channels":
-                        print("I am at previous channels")
-                        temp_data.active_question = temp_data.active_question - 1
-                        temp_data.save()
-                        channel_list = utils.list_connected_channel(
-                            user_id)
-
-                        if channel_list is not None:
-                            buttons = utils.list_to_button(
-                                channel_list, temp_data.active_question)
-                            utils.send_message(
-                                user_id, 'Choose the channel you want to delete', buttons=buttons)
-                            return Response(data='Done')
-                        else:
-                            utils.send_message(
-                                user_id, 'No channels to remove', buttons=data.BUTTON_LIST[0])
-                            return Response(data='Done')
-
-                    ###########################
-                    ###### Delete Channel #####
-                    if utils.get_connected_channel(user_id, message):
-                        utils.remove_connected_channel(user_id, message)
-                        utils.send_message(
-                            user_id, f'Channel {message} was removed succesfully.', buttons=data.BUTTON_LIST[0])
-                        temp_data.delete()
-                        return Response(data='Done')
-                    else:
-                        utils.send_message(
-                            user_id, "This channel doesn't exist.", buttons=data.BUTTON_LIST[0])
-                        temp_data.delete()
-                        return Response(data='Done')
-
-                    ##########################
+                        ##########################
 
                 # LIST_CHANNEL: If the user wants to list a channels
                 elif temp_data.form_name == 'list_channels':
@@ -269,8 +295,8 @@ def user_bot_webhook(request):
                     if message == 'More Channels':
                         temp_data.active_question = temp_data.active_question + 1
                         temp_data.save()
-                        channel_list = utils.list_connected_channel(
-                            user_id)
+                        channel_list = utils.list_connected_channel_by_feed(
+                            user_id, temp_data.data)
                         if channel_list is not None:
                             buttons = utils.list_to_button(
                                 channel_list, temp_data.active_question)
@@ -286,8 +312,8 @@ def user_bot_webhook(request):
                         print("I am at previous channels - LIST CHANNEL")
                         temp_data.active_question = temp_data.active_question - 1
                         temp_data.save()
-                        channel_list = utils.list_connected_channel(
-                            user_id)
+                        channel_list = utils.list_connected_channel_by_feed(
+                            user_id, temp_data.data)
 
                         if channel_list is not None:
                             buttons = utils.list_to_button(
@@ -301,12 +327,12 @@ def user_bot_webhook(request):
                             return Response(data='Done')
                     else:
                         utils.send_message(
-                            user_id, 'Welcome to FeedGram ETH bot!\nWhat do you want to do?', buttons=data.BUTTON_LIST[0])
+                            user_id, utils.get_homepage_info(user_id), buttons=data.BUTTON_LIST[0])
                         temp_data.delete()
                         return Response(data='Done')
                 else:
                     utils.send_message(
-                        user_id, 'Welcome to FeedGram ETH bot!\nWhat do you want to do?', buttons=data.BUTTON_LIST[0])
+                        user_id, utils.get_homepage_info(user_id), buttons=data.BUTTON_LIST[0])
                     temp_data.delete()
                     return Response(data='Done')
 

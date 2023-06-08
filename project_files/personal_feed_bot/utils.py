@@ -50,7 +50,7 @@ def create_user(user_id, first_name):
     return new_user
 
 
-def get_user(user_id):
+def get_user(user_id) -> BotUser:
 
     try:
         user = BotUser.objects.get(pk=user_id)
@@ -124,13 +124,14 @@ def get_connected_channel(user_id, channel_username, feed_channel_id=None):
                 owner_user=owner_user, channel_username=channel_username, feed_channel_id=feed_channel_id)
         else:
             connection = ConnectedChannels.objects.get(
-                owner_user=owner_user, channel_username=channel_username)
+                owner_user=owner_user, channel_username=channel_username, feed_channel=feed_channel_id)
         return connection
     except ConnectedChannels.DoesNotExist:
         return None
 
 
 def list_connected_channel(user_id):
+    user_id = str(user_id)
     owner_user = BotUser.objects.get(user_id=user_id)
     channel_list = ConnectedChannels.objects.filter(
         owner_user=owner_user)
@@ -141,10 +142,23 @@ def list_connected_channel(user_id):
         return None
 
 
-def remove_connected_channel(user_id, channel_username):
+def list_connected_channel_by_feed(user_id, feed_ch_id):
+    user_id = str(user_id)
+    feed_ch_id = str(feed_ch_id)
+    owner_user = BotUser.objects.get(user_id=user_id)
+    channel_list = ConnectedChannels.objects.filter(
+        owner_user=owner_user, feed_channel=feed_ch_id)
+
+    if channel_list.exists():
+        return channel_list
+    else:
+        return None
+
+
+def remove_connected_channel(user_id, channel_username, feed_channel_id=None):
     owner_user = BotUser.objects.get(user_id=user_id)
     connection = ConnectedChannels.objects.get(
-        owner_user=owner_user, channel_username=channel_username)
+        owner_user=owner_user, channel_username=channel_username, feed_channel=feed_channel_id)
     connection.delete()
 
 
@@ -191,7 +205,7 @@ def split_list(l, n):
 
 
 def list_to_button(l, i=0):
-
+    i = 0 if i == 0 else i-1
     list_10 = split_list(l, 10)
     if (i+1) > len(list_10) or i < 0:
         i = 0
@@ -226,6 +240,19 @@ def normal_list_to_button(l, i=0):
         btn = [{'text': t} for t in b]
         button_list.append(btn)
     return button_list
+
+
+def get_user_sub_level(chat_id) -> FeedgramFeature:
+    chat_id = str(chat_id)
+    bot_user = get_user(user_id=chat_id)
+
+    try:
+        user_sub = bot_user.subscription
+        sub_level = user_sub.sub_level
+    except BotUser.subscription.RelatedObjectDoesNotExist:
+        sub_level = FeedgramFeature.objects.get(sub_name='free')
+
+    return sub_level
 
 
 def check_feed_limit(chat_id):
@@ -270,12 +297,14 @@ def check_connection_limit(chat_id, feed_ch_id):
 
 def send_subscription_info(chat_id):
     features = FeedgramFeature.objects.all()
-    content = [f"# {f.invoice_title}\n\n{f.invoice_desc}" for f in features]
+    content = [
+        f"<b>{f.invoice_title}</b>\n\n{f.invoice_desc}" for f in features]
     content = "\n\n".join(content)
+    image_url = 'https://blackstormtech.com/big-logo-card.png'
 
     text = f"<b>Subscription Plans</b>:\n\n{content}"
     btns = data.SUB_BUTTONS
-    send_message(user_id=chat_id, text=text, buttons=btns)
+    send_image(user_id=chat_id, text=text, image_url=image_url, buttons=btns)
 
 
 def send_subscription(chat_id, sub_level):
@@ -287,10 +316,43 @@ def send_subscription(chat_id, sub_level):
     monthly_price = sub.price
     yearly_price = sub.price * 10
     btns = [
-        [{'text': f'Buy Monthly ({monthly_price} birr/month)', 'url': monthly_url},
-         {'text': f'Buy Yearly ({yearly_price} birr/year)', 'url': yearly_url}]
+        [{'text': f'Buy Monthly ({monthly_price} birr)', 'url': monthly_url},
+         {'text': f'Buy Yearly ({yearly_price} birr)', 'url': yearly_url}]
     ]
     print("This is text", text)
 
     send_image(user_id=chat_id, text=text,
                image_url=image_url, inline_buttons=btns)
+
+
+def get_homepage_info(chat_id):
+    chat_id = str(chat_id)
+    bot_user = get_user(user_id=chat_id)
+    feed_channels = FeedChannel.objects.filter(owner_user=bot_user)
+    sub_level = get_user_sub_level(chat_id)
+
+    sub_info = {
+        'level': sub_level.sub_name,
+        'exp_in': 'Never' if sub_level.sub_name == 'free' else f"{bot_user.subscription.days_left()} days",
+        'sup_chan_limit': sub_level.super_channels,
+        'conn_limit': sub_level.channel_per_superchannel
+
+    }
+
+    connected_ch = {}
+    for f in feed_channels:
+        f_name = f.feed_channel_name
+        f_conn_chs = [c.channel_username for c in ConnectedChannels.objects.filter(
+            owner_user=bot_user, feed_channel=f)]
+        connected_ch.update({f_name: f_conn_chs})
+
+    sub_info_text = f"❇️ <b>Subscription Info:</b>\n\n  🔹 Plan: {sub_info['level']}\n  🔹 Expires In: {sub_info['exp_in']}\n  🔹 Allowed Super Channels: {sub_info['sup_chan_limit']}\n  🔹 Channels per Super Channel: {sub_info['conn_limit']}"
+
+    sup_ch_no = len(feed_channels)
+    join_list = lambda l, c='\n    ▫️ ': c.join(l)
+    sup_ch_list = "\n".join(
+        [f' 🔸 {s_name} | {len(connected_ch[s_name])} channels\n    ▫️ {join_list(connected_ch[s_name])}\n' for s_name in connected_ch.keys()])
+
+    home_page_info = f"Welcome back 💖 <b>{bot_user.user_first_name}</b> 💖\n\n❇️ <b>Super Channels: {sup_ch_no} channels</b>\n\n{sup_ch_list}\n{sub_info_text}"
+
+    return home_page_info

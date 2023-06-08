@@ -21,8 +21,15 @@ class FeedgramSubscription(models.Model):
     created_date = models.DateTimeField(auto_now=True)
     exp_date = models.DateTimeField()
 
-    def is_active(self):
+    def is_active(self) -> bool:
         return self.exp_date > timezone.now()
+
+    def days_left(self) -> int:
+        if self.is_active():
+            t_left = self.exp_date - timezone.now()
+            return t_left.days
+        else:
+            return 0
 
     def __str__(self):
         return f"{self.bot_user.user_first_name} | {self.sub_period} | {self.sub_level} | {'Active' if self.is_active else 'Inactive'}"
