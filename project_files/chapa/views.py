@@ -48,6 +48,7 @@ def chapa_bot_webhook(request):
         print(request.data.get('invoice_payload'))
         answer_callback_query(query['id'])
         return Response(data='Done')
+    
     if request.data.get('message') and request.data.get('message').get('text'):
         text = request.data.get('message').get('text')
         if '/start' in text:

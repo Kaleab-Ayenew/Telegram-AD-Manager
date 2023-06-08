@@ -19,3 +19,5 @@ class TelegramData(models.Model):
         'SocialManagerUser', related_name='telegram_data', on_delete=models.CASCADE)
     manager_bot_token = models.CharField(max_length=150)
     channel_username = models.CharField(max_length=100)
+    
+

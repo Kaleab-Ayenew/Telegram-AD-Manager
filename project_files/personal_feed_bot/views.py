@@ -138,6 +138,12 @@ def user_bot_webhook(request):
                 elif message == '🌟 Get Advanced Plan':
                     utils.send_subscription(user_id, 'advanced')
                     return Response(data='Done')
+                
+                else:
+                    text = utils.get_homepage_info(user_id)
+                    utils.send_message(
+                        user_id, text, buttons=data.BUTTON_LIST[0])
+                    return Response(data='Done')
 
             else:
                 temp_data = utils.get_temp_data(user_id)
