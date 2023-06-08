@@ -126,6 +126,18 @@ def user_bot_webhook(request):
                     utils.send_message(
                         user_id, active_question, buttons)
                     return Response(data='Done')
+                
+                elif message == "❌ Disconnect Super Channel":
+                    temp_data = utils.create_temp_data(
+                        user_id, form_name='disconnect_super_channel')
+                    active_question = "Choose a Super to Disconnect"
+                    user_feed_channels = [
+                        ch.feed_channel_name for ch in utils.list_feed_channels(user_id)]
+                    buttons = utils.normal_list_to_button(user_feed_channels)
+                    utils.send_message(
+                        user_id, active_question, buttons)
+                    return Response(data='Done')
+                    
 
                 elif message == '🔥 Upgrade Plan 🔥':
                     utils.send_subscription_info(user_id)
@@ -295,47 +307,24 @@ def user_bot_webhook(request):
                             return Response(data='Done')
                         ##########################
 
-                # LIST_CHANNEL: If the user wants to list a channels
-                elif temp_data.form_name == 'list_channels':
-
-                    if message == 'More Channels':
-                        temp_data.active_question = temp_data.active_question + 1
-                        temp_data.save()
-                        channel_list = utils.list_connected_channel_by_feed(
-                            user_id, temp_data.data)
-                        if channel_list is not None:
-                            buttons = utils.list_to_button(
-                                channel_list, temp_data.active_question)
+                # Disconnect Super Channel
+                elif temp_data.form_name == 'disconnect_super_channel':
+                    if temp_data.active_question == 0:
+                        if utils.get_feed_channel_by_name(user_id, message):
+                            _feed_ch_id = utils.get_feed_channel_by_name(
+                                user_id, message).feed_channel_id
+                            utils.remove_feed_channel(user_id=user_id, ch_id=_feed_ch_id)
                             utils.send_message(
-                                user_id, 'Here is a list of your channels', buttons=buttons)
+                                user_id, f'Super channel {message} removed succesfully', buttons=data.BUTTON_LIST[0])
+                            temp_data.delete()
                             return Response(data='Done')
+                            
                         else:
                             utils.send_message(
-                                user_id, 'No channels to show', buttons=data.BUTTON_LIST[0])
-                            return Response(data='Done')
-
-                    elif message == "Previous Channels":
-                        print("I am at previous channels - LIST CHANNEL")
-                        temp_data.active_question = temp_data.active_question - 1
-                        temp_data.save()
-                        channel_list = utils.list_connected_channel_by_feed(
-                            user_id, temp_data.data)
-
-                        if channel_list is not None:
-                            buttons = utils.list_to_button(
-                                channel_list, temp_data.active_question)
-                            utils.send_message(
-                                user_id, 'Here is a list of your channels', buttons=buttons)
-                            return Response(data='Done')
-                        else:
-                            utils.send_message(
-                                user_id, 'No channels to show', buttons=data.BUTTON_LIST[0])
-                            return Response(data='Done')
-                    else:
-                        utils.send_message(
-                            user_id, utils.get_homepage_info(user_id), buttons=data.BUTTON_LIST[0])
-                        temp_data.delete()
-                        return Response(data='Done')
+                                user_id, "This channel is not in your feed.", buttons=data.BUTTON_LIST[0])
+                            temp_data.delete()
+                            return Response(data="Done")
+                        
                 else:
                     utils.send_message(
                         user_id, utils.get_homepage_info(user_id), buttons=data.BUTTON_LIST[0])
