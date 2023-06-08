@@ -123,6 +123,7 @@ def user_bot_webhook(request):
                     user_feed_channels = [
                         ch.feed_channel_name for ch in utils.list_feed_channels(user_id)]
                     buttons = utils.normal_list_to_button(user_feed_channels)
+                    buttons.append(data.BACK_TO_HOME_BUTTON)
                     utils.send_message(
                         user_id, active_question, buttons)
                     return Response(data='Done')
@@ -238,6 +239,7 @@ def user_bot_webhook(request):
                             if channel_list is not None:
                                 temp_data.active_question = temp_data.active_question + 1
                                 buttons = utils.list_to_button(channel_list)
+                                buttons.append(data.BACK_TO_HOME_BUTTON)
                                 utils.send_message(
                                     user_id, 'Choose the channel you want to delete:', buttons=buttons)
                                 temp_data.save()
@@ -266,6 +268,7 @@ def user_bot_webhook(request):
                             if channel_list is not None:
                                 buttons = utils.list_to_button(
                                     channel_list, temp_data.active_question)
+                                buttons.append(data.BACK_TO_HOME_BUTTON)
                                 utils.send_message(
                                     user_id, 'Choose the channel you want to delete', buttons=buttons)
                                 return Response(data='Done')
@@ -284,6 +287,7 @@ def user_bot_webhook(request):
                             if channel_list is not None:
                                 buttons = utils.list_to_button(
                                     channel_list, temp_data.active_question)
+                                buttons.append(data.BACK_TO_HOME_BUTTON)
                                 utils.send_message(
                                     user_id, 'Choose the channel you want to delete', buttons=buttons)
                                 return Response(data='Done')

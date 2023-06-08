@@ -5,9 +5,9 @@ ADD_CHANNEL_FORM = ['Choose a feed channel:',
 
 BUTTON_LIST = [
     # Home button
-    [[{'text': '🆕 Add Channels'}, {'text': '🗒 List Channels'}],
-     [{'text': '🗑 Remove a Channel'}, {'text': '🔥 Upgrade Plan 🔥'}],
-     [{'text':'🤠 Profile Info 🤠'}]],
+    [[{'text': '🆕 Add Channels'}, {'text': '🗑 Remove a Channel'},],
+     [ {'text': '❌ Disconnect Super Channel'}],
+     [{'text':'🤠 Profile Info 🤠'}, {'text': '🔥 Upgrade Plan 🔥'}]],
 ]
 
 BACK_TO_HOME_BUTTON = [{'text': '🏠 Back to Home 🏠'}]
