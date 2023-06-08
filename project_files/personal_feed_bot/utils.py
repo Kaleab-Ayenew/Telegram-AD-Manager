@@ -342,16 +342,16 @@ def get_homepage_info(chat_id):
     connected_ch = {}
     for f in feed_channels:
         f_name = f.feed_channel_name
-        f_conn_chs = [c.channel_username for c in ConnectedChannels.objects.filter(
+        f_conn_chs = ["   ▫️ " + c.channel_username for c in ConnectedChannels.objects.filter(
             owner_user=bot_user, feed_channel=f)]
         connected_ch.update({f_name: f_conn_chs})
 
     sub_info_text = f"❇️ <b>Subscription Info:</b>\n\n  🔹 Plan: {sub_info['level']}\n  🔹 Expires In: {sub_info['exp_in']}\n  🔹 Allowed Super Channels: {sub_info['sup_chan_limit']}\n  🔹 Channels per Super Channel: {sub_info['conn_limit']}"
 
     sup_ch_no = len(feed_channels)
-    join_list = lambda l, c='\n    ▫️ ': c.join(l)
+    join_list = lambda l, c='\n': c.join(l)
     sup_ch_list = "\n".join(
-        [f' 🔸 {s_name} | {len(connected_ch[s_name])} channels\n     {"▫️ "+join_list(connected_ch[s_name])}\n' for s_name in connected_ch.keys()])
+        [f' 🔸 {s_name} | {len(connected_ch[s_name])} channels\n     {join_list(connected_ch[s_name])}\n' for s_name in connected_ch.keys()])
 
     home_page_info = f"Welcome back 💖 <b>{bot_user.user_first_name}</b>\n\n❇️ <b>Super Channels: {sup_ch_no} channels</b>\n\n{sup_ch_list}\n{sub_info_text}"
 
