@@ -89,6 +89,7 @@ def user_bot_webhook(request):
                     user_feed_channels = [
                         ch.feed_channel_name for ch in utils.list_feed_channels(user_id)]
                     buttons = utils.normal_list_to_button(user_feed_channels)
+                    buttons.append(data.BACK_TO_HOME_BUTTON)
                     utils.send_message(
                         user_id, active_question, buttons)
 
@@ -101,8 +102,7 @@ def user_bot_webhook(request):
 
                     if channel_list is not None:
                         buttons = utils.list_to_button(channel_list)
-                        print('Buttons first', buttons)
-                        print(buttons, 'There are the buttons')
+                        buttons.append(data.BACK_TO_HOME_BUTTON)
                         utils.send_message(
                             user_id, 'Here is a list of your channels', buttons=buttons)
                         temp_data.save()
@@ -135,6 +135,7 @@ def user_bot_webhook(request):
                     user_feed_channels = [
                         ch.feed_channel_name for ch in utils.list_feed_channels(user_id)]
                     buttons = utils.normal_list_to_button(user_feed_channels)
+                    buttons.append(data.BACK_TO_HOME_BUTTON)
                     utils.send_message(
                         user_id, active_question, buttons)
                     return Response(data='Done')
@@ -181,6 +182,7 @@ def user_bot_webhook(request):
                                     user_id, message).feed_channel_id
                                 temp_data.active_question = temp_data.active_question + 1
                                 temp_data.save()
+                                
                                 utils.send_message(
                                     user_id, "❇️ Send the username of the channel you want to add to your feed.\n👉 Example: `tikvahethiopia`")
                                 return Response(data='Done')
