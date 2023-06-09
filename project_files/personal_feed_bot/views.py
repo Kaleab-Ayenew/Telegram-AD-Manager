@@ -23,7 +23,10 @@ def user_bot_webhook(request):
                 if utils.get_user(user_id):
 
                     if utils.check_feed_limit(user_id):
-
+                        if not chat.get('username'):
+                            utils.send_message(user_id=user.get(
+                            'id'), text=f"⛔️ The channel can't be PRIVATE. ⛔️\n\n❇️Please make the channel PUBLIC and add the bot again.\n\n")
+                            return Response(data='Done')
                         new_ch = utils.add_feed_channel(user.get('id'), chat.get(
                             'id'), chat.get('title'), chat.get('username'))
                         buttons = data.BUTTON_LIST[0]
