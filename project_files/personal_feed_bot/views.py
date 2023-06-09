@@ -113,7 +113,7 @@ def user_bot_webhook(request):
                         user_id, active_question, buttons)
                     return Response(data='Done')
                 
-                elif message == "🆕 Super Channel ለመጨመር":
+                elif message == "❇️ Super Channel ለመጨመር":
                     text = "❇️ Super Channel ለመጨመር አዲስ ቻናል ፈጥረው ይሄንን ቦት ቻናሉ ላይ add ብለው admin ያድርጉት።\n\n🛑 ማሳሰቢያ: አዲሱ ቻናል username ያለው ወይንም public ሊሆን ይገባል።"
                     utils.send_message(
                         user_id, text)
