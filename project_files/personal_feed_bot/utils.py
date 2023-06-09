@@ -353,7 +353,8 @@ def get_homepage_info(chat_id):
     sup_ch_list = "\n".join(
         [f' 🔸 {s_name} | {len(connected_ch[s_name])} channels\n{join_list(connected_ch[s_name])}\n' for s_name in connected_ch.keys()])
 
-    home_page_info = f"ሰላም 💖 <b>{bot_user.user_first_name}</b>\n\n❇️ <b>Super Channelኦች: {sup_ch_no} channels</b>\n\n{sup_ch_list}\n{sub_info_text}"
+    footer = "👉 ለተጨማሪ መረጃ ቻናላችንን ይቀላቀሉ:\n\nhttps://t.me/feedgram_info"
+    home_page_info = f"ሰላም 💖 <b>{bot_user.user_first_name}</b>\n\n❇️ <b>Super Channelኦች: {sup_ch_no} channels</b>\n\n{sup_ch_list}\n{sub_info_text}\n\n{footer}\n\n\n"
 
     return home_page_info
 
