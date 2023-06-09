@@ -333,7 +333,7 @@ def get_homepage_info(chat_id):
 
     sub_info = {
         'level': sub_level.sub_name,
-        'exp_in': 'Never' if sub_level.sub_name == 'free' else f"{bot_user.subscription.days_left()} days",
+        'exp_in': 'አያበቃም' if sub_level.sub_name == 'free' else f"ከ{bot_user.subscription.days_left()} ቀናት በኋላ",
         'sup_chan_limit': sub_level.super_channels,
         'conn_limit': sub_level.channel_per_superchannel
 
@@ -346,14 +346,14 @@ def get_homepage_info(chat_id):
             owner_user=bot_user, feed_channel=f)]
         connected_ch.update({f_name: f_conn_chs})
 
-    sub_info_text = f"❇️ <b>Subscription Info:</b>\n\n  🔹 Plan: {sub_info['level']}\n  🔹 Expires In: {sub_info['exp_in']}\n  🔹 Allowed Super Channels: {sub_info['sup_chan_limit']}\n  🔹 Channels per Super Channel: {sub_info['conn_limit']}"
+    sub_info_text = f"❇️ <b>ተጨማሪ መረጃ:</b>\n\n  🔹 ፓኬጅ: <b>{sub_info['level']}</b>\n  🔹 ፓኬጁ የሚያበቃው: <b>{sub_info['exp_in']}</b>\n  🔹 የSuper Channel ገደብ: <b>{sub_info['sup_chan_limit']}</b>\n  🔹 በ1 Super Channel ውስጥ የሚፈቀደው ቻናል: <b>{sub_info['conn_limit']}</b>"
 
     sup_ch_no = len(feed_channels)
     join_list = lambda l, c='\n': c.join(l)
     sup_ch_list = "\n".join(
         [f' 🔸 {s_name} | {len(connected_ch[s_name])} channels\n{join_list(connected_ch[s_name])}\n' for s_name in connected_ch.keys()])
 
-    home_page_info = f"Welcome back 💖 <b>{bot_user.user_first_name}</b>\n\n❇️ <b>Super Channels: {sup_ch_no} channels</b>\n\n{sup_ch_list}\n{sub_info_text}"
+    home_page_info = f"ሰላም 💖 <b>{bot_user.user_first_name}</b>\n\n❇️ <b>Super Channelኦች: {sup_ch_no} channels</b>\n\n{sup_ch_list}\n{sub_info_text}"
 
     return home_page_info
 
