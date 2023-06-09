@@ -222,7 +222,7 @@ def list_to_button(l, i=0):
         button_list.append([{'text': 'More Channels'}])
     if i > 0:
         button_list.append([{'text': 'Previous Channels'}])
-    button_list.append([{'text': 'Back to Home'}])
+    
 
     return button_list
 

@@ -1,23 +1,20 @@
-ADD_CHANNEL_FORM = ['Choose a feed channel:',
-                    '❇️ Send the username of the channel you want to add to your feed.\n👉 Example: `tikvahethiopia`',
-                    ]
 
 
 BUTTON_LIST = [
     # Home button
-    [[{'text': '🆕 Add Channels'}, {'text': '🗑 Remove a Channel'},],
-     [ {'text': '❌ Disconnect Super Channel'}],
-     [{'text':'🤠 Profile Info 🤠'}, {'text': '🔥 Upgrade Plan 🔥'}]],
+    [[{'text': '🆕 ቻናል ለመጨመር'}, {'text': '🗑 ቻናል ለመቀነስ'},],
+     [ {'text': '❌ Super Channel ለመቀነስ'}],
+     [{'text':'🤠 የእርስዎ መረጃ 🤠'}, {'text': '🔥 ልዩ ፓኬጅ ለመግዛት 🔥'}]],
 ]
 
-BACK_TO_HOME_BUTTON = [{'text': '🏠 Back to Home 🏠'}]
+BACK_TO_HOME_BUTTON = [{'text': '🏠 ዋና ማውጫ 🏠'}]
 
 SUB_BUTTONS = [
-    [{'text': '⭐️ Get Basic Plan'}, {'text': '🌟 Get Advanced Plan'}],
-    [{'text': '🏠 Back to Home 🏠'}]
+    [{'text': '⭐️ Basic Plan ለመግዛት'}, {'text': '🌟 Advanced Plan ለመግዛት'}],
+    [{'text': '🏠 ዋና ማውጫ 🏠'}]
 ]
 
 SEE_SUB_BUTTON = [
-    [{'text': '🔥 Upgrade Plan 🔥'}],
-    [{'text': '🏠 Back to Home 🏠'}]
+    [{'text': '🔥 ልዩ ፓኬጅ ለመግዛት 🔥'}],
+    [{'text': '🏠 ዋና ማውጫ 🏠'}]
 ]
