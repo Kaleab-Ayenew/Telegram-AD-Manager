@@ -187,7 +187,7 @@ def user_bot_webhook(request):
                                 temp_data.save()
                                 
                                 utils.send_message(
-                                    user_id, "❇️ Send the username of the channel you want to add to your feed.\n👉 Example: `tikvahethiopia`")
+                                    user_id, "❇️ Send the username or link of the channel you want to add to your feed.\n👉 Example: `https://t.me/tikvahethiopia`")
                                 return Response(data='Done')
                             else:
                                 _feed_ch_name = utils.get_feed_channel_by_name(
@@ -203,7 +203,7 @@ def user_bot_webhook(request):
                             return Response(data="Done")
 
                     if temp_data.active_question == 1:
-
+                        message = utils.extract_username(message)
                         if utils.get_connected_channel(user_id, message, temp_data.data):
                             utils.send_message(
                                 user_id, "This channel already exists.", buttons=data.BUTTON_LIST[0])
