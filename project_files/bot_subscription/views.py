@@ -51,12 +51,16 @@ def main_bot_handler(request):
         bt_name = payload.get('bot_name')
         sub_fun = utils.SUB_FUNS.get(bt_name)
         subscription = sub_fun(chat_id=chat_id, data=payload)
+        
+        
         if subscription:
-            send_message(user_id=chat_id, text=payload,
+            text_response = f"❇️ ክፍያው ተሳክቷል።\n\n😊 ወደ ቦቱ በመመለስ አዲስ የገዙትን {payload.get('sub_level')} plan መጠቀም ይችላሉ።"
+            send_message(user_id=chat_id, text=text_response,
                          bot_token=data.SUB_BOT_TOKEN)
             return Response(data='Done')
         else:
-            send_message(user_id=chat_id, text='An Error has occured',
+            text_response = '⛔️ ክፍያው አልተሳካም። እባክዎን እንደገና ይሞክሩ ⛔️'
+            send_message(user_id=chat_id, text=text_response,
                          bot_token=data.SUB_BOT_TOKEN)
             return Response(data='Done')
 
