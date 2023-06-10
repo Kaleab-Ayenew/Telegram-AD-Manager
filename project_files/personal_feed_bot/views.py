@@ -104,7 +104,7 @@ def user_bot_webhook(request):
                     temp_data = utils.create_temp_data(
                         user_id, form_name='remove_channel')
 
-                    active_question = "ቻናሉን የሚቀንሱት ከየትኛው Super Channel ነው?/n/n❇️ ከታች ከተዘረዘሩት Super Channelኦች አንዱን ይምረጡ:"
+                    active_question = "ቻናሉን የሚቀንሱት ከየትኛው Super Channel ነው?\n\n❇️ ከታች ከተዘረዘሩት Super Channelኦች አንዱን ይምረጡ:"
                     user_feed_channels = [
                         ch.feed_channel_name for ch in utils.list_feed_channels(user_id)]
                     buttons = utils.normal_list_to_button(user_feed_channels)
