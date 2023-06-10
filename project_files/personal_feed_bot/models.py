@@ -1,6 +1,7 @@
 from django.db import models
 
 # Create your models here.
+import random
 
 
 class BotUser(models.Model):
@@ -18,7 +19,7 @@ class FeedChannel(models.Model):
 
     owner_user = models.ForeignKey(
         BotUser, on_delete=models.CASCADE, related_name='feed_channels')
-    feed_channel_id = models.CharField(primary_key=True, max_length=50)
+    feed_channel_id = models.CharField(max_length=50, primary_key=True)
     feed_channel_username = models.CharField(max_length=50, null=True)
     feed_channel_name = models.CharField(max_length=100)
 
