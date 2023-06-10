@@ -200,7 +200,7 @@ def user_bot_webhook(request):
 
                         if utils.check_channel(message):
                             feed_ch_id = str(temp_data.data)
-                            feed_ch_name = utils.get_feed_channel_by_id(user_id, feed_ch_id)
+                            feed_ch_name = utils.get_feed_channel_by_id(user_id, feed_ch_id).feed_channel_name
                             utils.add_connected_channel(
                                 user_id, feed_ch_id, message)
                             buttons = data.BUTTON_LIST[0]
