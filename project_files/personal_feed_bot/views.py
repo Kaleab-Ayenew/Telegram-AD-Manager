@@ -31,7 +31,7 @@ def user_bot_webhook(request):
                             'id'), chat.get('title'), chat.get('username'))
                         buttons = data.BUTTON_LIST[0]
                         utils.send_message(user_id=user.get(
-                            'id'), text=f"❇️ {new_ch.feed_channel_name} በስኬት ወደ Super Channel ዝርዝር ተጨምሯል።", buttons=buttons)
+                            'id'), text=f"❇️ {new_ch.feed_channel_name} በስኬት ወደ Super Channel ዝርዝር ተጨምሯል።\n\n\"🆕 ቻናል ለመጨመር\" የሚለውን በመንካት የፈለጓቸውን ቻናሎች ወደ Super Channelኡ ማካተት ይችላሉ።", buttons=buttons)
                         return Response(data='Done')
                     else:
                         utils.send_message(
