@@ -32,6 +32,7 @@ urlpatterns = [
     path('link/', include('link_shortner.urls')),
     # path('neva-bot/', include('neva_bot.urls')),
     path('black-storm-sub-bot/', include('bot_subscription.urls')),
+    path('suqlink/', include('suqlink.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

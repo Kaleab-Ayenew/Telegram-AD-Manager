@@ -5,4 +5,8 @@ class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField()
 
-# class FacebookLinkSerializer(serializers.Serializer):
+
+class SignUpSerializer(serializers.Serializer):
+    email = serializers.CharField()
+    username = serializers.CharField()
+    password = serializers.CharField()
