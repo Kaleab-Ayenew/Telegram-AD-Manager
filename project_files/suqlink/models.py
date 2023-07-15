@@ -3,8 +3,9 @@ from uuid import uuid4
 import time
 from django.conf import settings
 from django.utils import timezone
+from django.contrib.auth.models import User
 from datetime import timedelta
-
+from django.utils.crypto import get_random_string
 # Helper functions
 
 
@@ -37,16 +38,16 @@ def get_product_id():
 def get_templink_id():
     while True:
         id = get_random_string(10)
-        if not TempDowloadLink.objects.filter(link_id=id).exists():
+        if not TempDownloadLink.objects.filter(link_id=id).exists():
             return id
 
 
 class TemporarySellerData(models.Model):
     temp_data_uuid = models.UUIDField(
         default=uuid4, editable=False, primary_key=True)
-    seller_username = models.CharField(max_length=100)
+
     seller_password = models.CharField(max_length=100)
-    seller_email = models.EmailField(max_length=15)
+    seller_email = models.EmailField(max_length=50)
     bank_account_full_name = models.CharField(max_length=200)
     bank_account_number = models.CharField(max_length=50)
     bank_provider = models.UUIDField()
@@ -56,15 +57,15 @@ class TemporarySellerData(models.Model):
 
 class Seller(models.Model):
     main_user = models.OneToOneField(
-        'User', on_delete=models.CASCADE, related_name='__sellers')
-    seller_username = models.CharField(max_length=100, primary_key=True)
+        User, on_delete=models.CASCADE, related_name='sellers')
+    seller_username = models.EmailField(max_length=100, primary_key=True)
     seller_photo = models.ImageField(
         upload_to=get_seller_photo_path, null=True)
     seller_timestamp = models.DateTimeField(auto_now_add=True)
     bank_account_full_name = models.CharField(max_length=200)
     bank_account_number = models.CharField(max_length=50)
     bank_provider = models.ForeignKey(
-        'ChapaBanks', on_delete=models.RESTRICT, related_name='this_bank_sellers')
+        'ChapaBank', on_delete=models.RESTRICT, related_name='this_bank_sellers')
     chapa_subaccount_id = models.UUIDField(null=True)
 
 
@@ -75,7 +76,7 @@ class ChapaBank(models.Model):
 
 class Product(models.Model):
     product_seller = models.ForeignKey(
-        'Seller', on_delete=models.CASCADE, related_name='__products')
+        'Seller', on_delete=models.CASCADE, related_name='products')
     product_id = models.CharField(
         max_length=10, default=get_product_id, editable=False)
     product_name = models.CharField(max_length=200)
@@ -91,7 +92,7 @@ class Product(models.Model):
 class Sale(models.Model):
     sold_product = models.ForeignKey('Product', on_delete=models.CASCADE)
     sale_timestamp = models.DateTimeField(auto_now_add=True)
-    chapa_transaction_ref = models.UUIDField(null=True)
+    chapa_transaction_ref = models.UUIDField(null=True, unique=True)
     completed = models.BooleanField(default=False)
 
 
@@ -102,7 +103,7 @@ class TempDownloadLink(models.Model):
         'Sale', on_delete=models.CASCADE, related_name="temp_link")
 
     time_stamp = models.DateTimeField(auto_now_add=True)
-    was_user = models.BooleanField(default=False)
+    was_used = models.BooleanField(default=False)
 
     def is_expired(self):
         now = timezone.now()
@@ -113,9 +114,9 @@ class TempDownloadLink(models.Model):
             return False
 
     def link_string(self):
-        l = f"{settings.HOST_URL}download/{self.link_id}"
+        l = f"{settings.HOST_URL}suqlink/download/{self.link_id}"
         return l
 
     def __str__(self):
-        l = f"{settings.HOST_URL}download/{self.link_id}"
+        l = f"{settings.HOST_URL}suqlink/download/{self.link_id}"
         return l

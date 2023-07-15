@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.models import Token
 
-from .serializers import TempSellerSerializer, CreateUserSerializer, SellerSerializer, LoginSerializer, ProductSerializer, PaymentInfoSerializer, TempDownloadLink
+from .serializers import TempSellerSerializer, UserCreateSerializer, SellerSerializer, LoginSerializer, ProductSerializer, PaymentInfoSerializer, TempDownloadLink
 from .models import TemporarySellerData
 from . import utils
 from . import permissions
@@ -13,7 +13,9 @@ from . import permissions
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-from django.http import HTTPResponse, FileResponse
+from django.http import FileResponse
+
+from uuid import uuid4
 
 
 @api_view(['POST'])
@@ -36,9 +38,9 @@ def verify_email(request, temp_data_uuid):
 
     if code == temp_seller.verification_code:
         # Create the seller object here
-        user_create_data = {"username": temp_seller.seller_username,
+        user_create_data = {"username": temp_seller.seller_email,
                             "password": temp_seller.seller_password, "email": temp_seller.seller_email}
-        user_serializer = CreateUserSerializer(data=user_create_data)
+        user_serializer = UserCreateSerializer(data=user_create_data)
         if user_serializer.is_valid():
             new_user = User.objects.create_user(
                 **user_serializer.validated_data)
@@ -46,7 +48,9 @@ def verify_email(request, temp_data_uuid):
             return Response(data=user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         seller_create_data = TempSellerSerializer(temp_seller).data
-        seller_create_data.update({"main_user": new_user.pk})
+        seller_email = seller_create_data.get("seller_email")
+        seller_create_data.update(
+            {"main_user": new_user.pk, "seller_username": seller_email})
         seller_serializer = SellerSerializer(data=seller_create_data)
 
         if seller_serializer.is_valid():
@@ -54,7 +58,7 @@ def verify_email(request, temp_data_uuid):
             if utils.create_chapa_subaccount(new_seller):
                 return Response(data={"message": "Seller created succesfully!"}, status=status.HTTP_201_CREATED)
             else:
-                return Reponse(data={"Failed to create Chapa subaccount"}, status=staus.HTTP_400_BAD_REQUEST)
+                return Reponse(data={"error": "Failed to create Chapa subaccount"}, status=staus.HTTP_400_BAD_REQUEST)
         else:
             return Response(data=seller_serializer.errors)
     else:
@@ -82,38 +86,44 @@ def login_view(request):
 
 
 @api_view(['POST'])
-@permssion_classes((permissions.IsSeller,))
+@permission_classes((permissions.IsSeller,))
 def create_product(request):
     product_serializer = ProductSerializer(data=request.data)
 
     if product_serializer.is_valid():
         seller_user = utils.get_seller_from_user(request.user)
         new_product = product_serializer.save(product_seller=seller_user)
-        return Response(data={"message": "Product created successfully!"}, status=status.HTTP_201_CREATED)
+        return Response(data=product_serializer.data, status=status.HTTP_201_CREATED)
     else:
         return Response(data=product_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
-@permssion_classes((AllowAny,))
+@api_view(['GET'])
+@permission_classes((AllowAny,))
 def get_payment_link(request, product_id):
     payment_info_serializer = PaymentInfoSerializer(data=request.data)
     if payment_info_serializer.is_valid():
-        validated_data = payment_info_serializer.validated_date
+        validated_data = payment_info_serializer.validated_data
+        transaction_ref = str(uuid4())
         product_obj = utils.get_product_by_id(product_id)
         payment_link = utils.get_split_payment_link(
-            validated_data, product_obj)
-        return Response(data={"link": payment_link})
+            validated_data, product_obj, transaction_ref)
+        if payment_link:
+            new_sale = utils.create_sale(product_obj, transaction_ref)
+            return Response(data={"link": payment_link})
+
+        else:
+            return Response(data={"error": "An error has occured"})
     else:
-        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(data=payment_info_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
-@permssion_classes((AllowAny,))
+@api_view(['GET'])
+@permission_classes((AllowAny,))
 def chapa_callback_verify(request, transaction_ref):
     payment_status = utils.verify_payment(transaction_ref)
     if payment_status == "success":
-        sale = get_sale_by_tx_ref(transaction_ref)
+        sale = utils.get_sale_by_tx_ref(transaction_ref)
         sale.completed = True
         sale.save()
         temp_download_link = utils.create_download_link(sale).link_string()
@@ -124,7 +134,8 @@ def chapa_callback_verify(request, transaction_ref):
         return Response(data=rsp_data)
     elif payment_status == "failed":
         sale = utils.get_sale_by_tx_ref(transaction_ref)
-        sale.delete()
+        if sale:
+            sale.delete()
         rsp_data = {"status": "failed"}
         return Response(data=rsp_data)
     else:
@@ -132,8 +143,8 @@ def chapa_callback_verify(request, transaction_ref):
         return Response(data=rsp_data)
 
 
-@api_view(['POST'])
-@permssion_classes((AllowAny,))
+@api_view(['GET'])
+@permission_classes((AllowAny,))
 def product_download_handler(request, link_id):
     temp_link = utils.get_templink_by_id(link_id)
 

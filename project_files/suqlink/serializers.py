@@ -33,8 +33,12 @@ class SellerSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
+
     class Meta:
-        fields = "__all__"
+        exclude = ["product_seller"]
+        extra_kwargs = {"product_seller": {
+            "write_only": True
+        }}
         model = Product
 
 
