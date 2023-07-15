@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from datetime import timedelta
 from django.utils.crypto import get_random_string
+from django.core.validators import MinValueValidator
 # Helper functions
 
 
@@ -42,15 +43,19 @@ def get_templink_id():
             return id
 
 
+def get_withdrawal_ref():
+    while True:
+        id = get_random_string(10)
+        if not WithdrawRequest.objects.filter(withdraw_reference=id).exists():
+            return id
+
+
 class TemporarySellerData(models.Model):
     temp_data_uuid = models.UUIDField(
         default=uuid4, editable=False, primary_key=True)
 
     seller_password = models.CharField(max_length=100)
     seller_email = models.EmailField(max_length=50)
-    bank_account_full_name = models.CharField(max_length=200)
-    bank_account_number = models.CharField(max_length=50)
-    bank_provider = models.UUIDField()
     temp_data_timestamp = models.DateTimeField(auto_now_add=True)
     verification_code = models.CharField(max_length=8, null=True)
 
@@ -62,11 +67,8 @@ class Seller(models.Model):
     seller_photo = models.ImageField(
         upload_to=get_seller_photo_path, null=True)
     seller_timestamp = models.DateTimeField(auto_now_add=True)
-    bank_account_full_name = models.CharField(max_length=200)
-    bank_account_number = models.CharField(max_length=50)
-    bank_provider = models.ForeignKey(
-        'ChapaBank', on_delete=models.RESTRICT, related_name='this_bank_sellers')
-    chapa_subaccount_id = models.UUIDField(null=True)
+    total_income = models.DecimalField(
+        decimal_places=2, max_digits=15, default=0.00)
 
 
 class ChapaBank(models.Model):
@@ -120,3 +122,21 @@ class TempDownloadLink(models.Model):
     def __str__(self):
         l = f"{settings.HOST_URL}suqlink/download/{self.link_id}"
         return l
+
+
+class WithdrawRequest(models.Model):
+    seller = models.ForeignKey(
+        'Seller', on_delete=models.CASCADE, related_name='withdrawals')
+    withdraw_reference = models.CharField(
+        default=get_withdrawal_ref, max_length=10, primary_key=True)
+    bank_account_name = models.CharField(max_length=50)
+    bank_account_number = models.CharField(max_length=20)
+    chapa_bank = models.ForeignKey(
+        'ChapaBank', on_delete=models.CASCADE, related_name='withdrawals')
+    amount = models.DecimalField(decimal_places=2, max_digits=10, validators=[
+                                 MinValueValidator(5)])
+    status = models.CharField(max_length=10, default="pending")
+    chapa_webhook_data = models.TextField(null=True)
+
+    def __str__(self):
+        return f"{self.bank_account_name} | {self.amount} | {self.status}"

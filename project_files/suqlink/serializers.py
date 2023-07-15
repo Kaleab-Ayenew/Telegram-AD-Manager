@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Seller, Product, ChapaBank, Sale, TemporarySellerData, TempDownloadLink
+from .models import Seller, Product, ChapaBank, Sale, TemporarySellerData, TempDownloadLink, WithdrawRequest
 
 
 class UserCreateSerializer(serializers.Serializer):
@@ -58,3 +58,12 @@ class TempLinkSerializer(serializers.ModelSerializer):
     class Meta:
         fields = "__all__"
         model = TempDownloadLink
+
+
+class WithdrawInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        exclude = ["seller"]
+        extra_kwargs = {"seller": {
+            "write_only": True
+        }}
+        model = WithdrawRequest

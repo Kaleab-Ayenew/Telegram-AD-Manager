@@ -8,6 +8,9 @@ from . import config
 
 import requests
 from uuid import uuid4
+from decimal import Decimal
+import hashlib
+import hmac
 
 
 def send_verification_code(temp_seller):
@@ -69,7 +72,7 @@ def get_split_payment_link(info, product, transaction_ref):
         "tx_ref": transaction_ref,
         "callback_url": f"{settings.HOST_URL}suqlink/payment/verify/{transaction_ref}/",
         "return_url": f"https://suqlink.com/purchased/{transaction_ref}",
-        "subaccounts[id]": str(product.product_seller.chapa_subaccount_id)
+
     }
     print("Payment Data", post_data)
     rsp = requests.post(url=rq_url, headers=headers, json=post_data)
@@ -134,3 +137,75 @@ def get_product_from_link(link_id):
 def get_templink_by_id(link_id):
     temp_link = get_object_or_404(models.TempDownloadLink, pk=link_id)
     return temp_link
+
+
+def update_seller_income(sale):
+    current_total_income = sale.sold_product.product_seller.total_income
+    current_sale_price = sale.sold_product.product_price
+    seller_income_percent = 100 - config.CHARGE_PERCENT
+    sale_income_for_seller = (current_sale_price * seller_income_percent) / 100
+    sale_income_for_seller = round(sale_income_for_seller, 2)
+    new_total_income = current_total_income + \
+        Decimal(str(sale_income_for_seller))
+    sale.sold_product.product_seller.total_income = new_total_income
+    sale.sold_product.product_seller.save()
+
+
+def withdraw_to_bank(withdraw_info):
+    rq_url = "https://api.chapa.co/v1/transfers"
+    headers = {
+        "Authorization": f"Bearer {config.CHAPA_SECRET_TOKEN}"
+    }
+    post_data = {
+        "account_name": withdraw_info.bank_account_name,
+        "account_number": withdraw_info.bank_account_number,
+        "amount": float(withdraw_info.amount),
+        "currency": "ETB",
+        "beneficiary_name": withdraw_info.bank_account_name,
+        "reference": withdraw_info.withdraw_reference,
+        "bank_code": str(withdraw_info.chapa_bank.chapa_bank_id)
+    }
+    rsp = requests.post(url=rq_url, json=post_data, headers=headers)
+
+    return rsp.json()
+
+
+def get_withdraw_request(seller):
+    withdraw_requests = models.WithdrawRequest.objects.filter(
+        seller=seller, status='pending')
+    if withdraw_requests.exists():
+        return withdraw_requests.all()
+    else:
+        return None
+
+
+def check_webhook_secret(chapa_signature):
+
+    key = bytes(config.CHAPA_WEBHOOK_SECRET, encoding='utf-8')
+    message = bytes(config.CHAPA_WEBHOOK_SECRET, encoding='utf-8')
+
+    # Generate the hash.
+    signature = hmac.new(
+        key,
+        message,
+        hashlib.sha256
+    ).hexdigest()
+
+    return signature == chapa_signature
+
+
+def get_withdrawal_by_reference(with_ref):
+    try:
+        with_req = models.WithdrawRequest.objects.get(
+            withdraw_reference=with_ref)
+        return with_req
+    except models.WithdrawRequest.DoesNotExist:
+        return None
+
+
+def withdrawal_deduct(with_req):
+    seller = with_req.seller
+    current_total_income = seller.total_income
+    withdraw_amount = with_req.amount
+    seller.total_income = current_total_income - withdraw_amount
+    seller.save()

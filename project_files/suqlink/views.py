@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.models import Token
 
-from .serializers import TempSellerSerializer, UserCreateSerializer, SellerSerializer, LoginSerializer, ProductSerializer, PaymentInfoSerializer, TempDownloadLink
+from .serializers import TempSellerSerializer, UserCreateSerializer, SellerSerializer, LoginSerializer, ProductSerializer, PaymentInfoSerializer, TempDownloadLink, WithdrawInfoSerializer
 from .models import TemporarySellerData
 from . import utils
 from . import permissions
@@ -16,6 +16,7 @@ from django.contrib.auth import authenticate
 from django.http import FileResponse
 
 from uuid import uuid4
+import json
 
 
 @api_view(['POST'])
@@ -55,14 +56,11 @@ def verify_email(request, temp_data_uuid):
 
         if seller_serializer.is_valid():
             new_seller = seller_serializer.save()
-            if utils.create_chapa_subaccount(new_seller):
-                return Response(data={"message": "Seller created succesfully!"}, status=status.HTTP_201_CREATED)
-            else:
-                return Reponse(data={"error": "Failed to create Chapa subaccount"}, status=staus.HTTP_400_BAD_REQUEST)
+            return Response(data={"message": "Seller created succesfully!"}, status=status.HTTP_201_CREATED)
         else:
             return Response(data=seller_serializer.errors)
     else:
-        return Response(data="Wrong code", status=status.HTTP_401_UNAUTHORIZED)
+        return Response(data={"error": "Wrong Code"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 @api_view(['POST'])
@@ -126,6 +124,8 @@ def chapa_callback_verify(request, transaction_ref):
         sale = utils.get_sale_by_tx_ref(transaction_ref)
         sale.completed = True
         sale.save()
+        # The Seller total income is updated here
+        utils.update_seller_income(sale)
         temp_download_link = utils.create_download_link(sale).link_string()
         rsp_data = {"status": "completed", "download_link": temp_download_link}
         return Response(data=rsp_data)
@@ -156,3 +156,56 @@ def product_download_handler(request, link_id):
     temp_link.was_used = True
     temp_link.save()
     return FileResponse(product_file)
+
+
+@api_view(['POST'])
+@permission_classes((permissions.IsSeller,))
+def withdraw_to_bank(request):
+    seller = utils.get_seller_from_user(request.user)
+    withdraw_info_serializer = WithdrawInfoSerializer(data=request.data)
+    current_withdraw_requests = utils.get_withdraw_request(seller)
+    if current_withdraw_requests:
+        return Response(data={"error": "There is a pending withdrawal request."}, status=status.HTTP_403_FORBIDDEN)
+    if withdraw_info_serializer.is_valid():
+        if withdraw_info_serializer.validated_data.get("amount") > seller.total_income:
+            return Response(data={"error": "Insufficient funds for withdrawal."}, status=status.HTTP_403_FORBIDDEN)
+        new_with_request = withdraw_info_serializer.save(seller=seller)
+        withdraw_req_response = utils.withdraw_to_bank(new_with_request)
+        if withdraw_req_response.get("status") == "success":
+            return Response(data={"message": "Withdrawal completed successfully"})
+        else:
+            return Response(data=withdraw_req_response, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response(data=withdraw_info_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def chapa_event_webhook(request):
+    data = request.data
+    chapa_signature = request.headers.get("Chapa-Signature")
+    if utils.check_webhook_secret(chapa_signature):
+        print(data)
+        with_ref = data.get("reference")
+        if not with_ref:
+            print("Error: Couldn't find withdrawal reference!")
+            return Response(status=status.HTTP_200_OK)
+        withdraw_request = utils.get_withdrawal_by_reference(with_ref)
+        if not withdraw_request:
+            print("Error: Couldn't withdrawal by reference!")
+            return Response(status=status.HTTP_200_OK)
+
+        withdraw_request.chapa_webhook_data = json.dumps(data)
+        withdraw_request.save()
+        with_status = data.get("status")
+        if with_status == "success":
+            utils.withdrawal_deduct(withdraw_request)
+            withdraw_request.status = "completed"
+            withdraw_request.save()
+        elif with_status == "failed":
+            withdraw_request.status = "failed"
+            withdraw_request.save()
+        return Response(status=status.HTTP_200_OK)
+    else:
+        print(data)
+        return Response(status=status.HTTP_200_OK)
