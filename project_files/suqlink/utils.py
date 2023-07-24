@@ -34,7 +34,7 @@ def send_verification_code(temp_seller):
     send_mail(
         "Verification Code",
         f"Dear SUQLINK seller, your email verification code is: {code}",
-        "kalishayish16@gmail.com",
+        "verify@suqlink.com",
         [temp_seller.seller_email],
         fail_silently=False
     )
