@@ -1,5 +1,7 @@
 import requests
 from django.conf import settings
+import os
+from pathlib import Path
 
 
 class BotMessage():
@@ -66,3 +68,14 @@ def set_webhook(token, url):
     rsp = bot_request(token, 'setwebhook', {'url': url})
     print(rsp.json())
     return rsp.json()
+
+
+def _delete_file(path):
+    """ Deletes file from filesystem. """
+    if os.path.isfile(path):
+        os.remove(path)
+
+
+def _remove_path(path):
+    p = Path(path)
+    os.rmdir(p.parent.absolute())

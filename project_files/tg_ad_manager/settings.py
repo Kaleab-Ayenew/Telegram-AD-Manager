@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'link_shortner',
     # 'neva_bot',
     'bot_subscription',
+    'suqlink',
     'corsheaders',
 ]
 
@@ -199,4 +200,9 @@ EMAIL_HOST_USER = 'kalishayish16@gmail.com'
 EMAIL_HOST_PASSWORD = 'wgosrtcfibczynzm'
 
 
-HOST_URL = "https://a8b1-197-156-107-36.ngrok-free.app/" if not PROD else "https://ubuntu-vps.kal-dev.com/"
+HOST_URL = "https://6601-212-8-243-71.ngrok-free.app/" if not PROD else "https://ubuntu-vps.kal-dev.com/"
+
+
+# SUQLINK DATA
+CHAPA_SECRET_TOKEN = env('CHAPA_SECRET_TOKEN')
+CHAPA_WEBHOOK_SECRET = env('CHAPA_WEBHOOK_SECRET')

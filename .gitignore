@@ -5,3 +5,5 @@ media_files/
 db.sqlite3
 activate.ps1
 Notes.txt
+cert.pem
+key.pem

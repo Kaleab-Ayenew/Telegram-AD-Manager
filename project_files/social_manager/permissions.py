@@ -16,7 +16,6 @@ class IsAuthAndOwnsObject(IsAuthenticated):
 
 class IsSocialManagerUser(IsAuthenticated):
     message = "You don't have permission to access this data."
-
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
