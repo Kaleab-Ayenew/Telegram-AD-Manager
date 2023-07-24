@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from datetime import timedelta
 from django.utils.crypto import get_random_string
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 # Helper functions
 
 
@@ -55,7 +55,7 @@ class TemporarySellerData(models.Model):
         default=uuid4, editable=False, primary_key=True)
 
     seller_password = models.CharField(max_length=100)
-    seller_email = models.EmailField(max_length=50)
+    seller_email = models.EmailField(max_length=50, unique=True)
     temp_data_timestamp = models.DateTimeField(auto_now_add=True)
     verification_code = models.CharField(max_length=8, null=True)
 
@@ -80,19 +80,22 @@ class Product(models.Model):
     product_seller = models.ForeignKey(
         'Seller', on_delete=models.CASCADE, related_name='products')
     product_id = models.CharField(
-        max_length=10, default=get_product_id, editable=False)
+        max_length=10, default=get_product_id, editable=False, primary_key=True)
     product_name = models.CharField(max_length=200)
     product_thumbnail = models.ImageField(
         upload_to=get_product_thumb_path, max_length=200)
     product_description = models.TextField()
-    product_price = models.IntegerField()
+    product_short_description = models.CharField(max_length=300)
+    product_price = models.DecimalField(decimal_places=2, max_digits=10, validators=[
+                                        MinValueValidator(0), MaxValueValidator(1000000)])
     product_file = models.FileField(
         upload_to=get_product_file_path, max_length=200)
     product_timestamp = models.DateTimeField(auto_now_add=True)
 
 
 class Sale(models.Model):
-    sold_product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    sold_product = models.ForeignKey(
+        'Product', on_delete=models.CASCADE, related_name='product_sales')
     sale_timestamp = models.DateTimeField(auto_now_add=True)
     chapa_transaction_ref = models.UUIDField(null=True, unique=True)
     completed = models.BooleanField(default=False)
@@ -106,6 +109,7 @@ class TempDownloadLink(models.Model):
 
     time_stamp = models.DateTimeField(auto_now_add=True)
     was_used = models.BooleanField(default=False)
+    # Consider adding a field that registers how many times the link was used to prevent sharing the link
 
     def is_expired(self):
         now = timezone.now()

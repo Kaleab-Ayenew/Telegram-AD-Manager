@@ -2,6 +2,9 @@ from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.conf import settings
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
 
 from . import models
 from . import config
@@ -11,6 +14,16 @@ from uuid import uuid4
 from decimal import Decimal
 import hashlib
 import hmac
+
+import magic
+
+
+def check_file_type(f, test_file_type):
+    file_type = magic.from_buffer(f.read(), mime=True)
+    if file_type == test_file_type:
+        return True
+    else:
+        return False
 
 
 def send_verification_code(temp_seller):
@@ -63,7 +76,7 @@ def get_split_payment_link(info, product, transaction_ref):
         'Content-Type': 'application/json'
     }
     post_data = {
-        "amount": product.product_price,
+        "amount": float(product.product_price),
         "currency": "ETB",
         "email": info.get("email"),
         "first_name": info.get("first_name"),
@@ -71,7 +84,7 @@ def get_split_payment_link(info, product, transaction_ref):
         "phone_number": info.get("phone_no"),
         "tx_ref": transaction_ref,
         "callback_url": f"{settings.HOST_URL}suqlink/payment/verify/{transaction_ref}/",
-        "return_url": f"https://suqlink.com/purchased/{transaction_ref}",
+        "return_url": f"http://localhost:3000/purchased/{transaction_ref}",
 
     }
     print("Payment Data", post_data)
@@ -82,6 +95,11 @@ def get_split_payment_link(info, product, transaction_ref):
         return None
 
     return rsp.json().get("data").get("checkout_url")
+
+
+def get_all_products(seller):
+    products = models.Product.objects.filter(product_seller=seller)
+    return products.all()
 
 
 def get_product_by_id(product_id):
@@ -98,6 +116,12 @@ def get_sale_by_tx_ref(transaction_ref):
         return sale
     except models.Sale.DoesNotExist:
         return None
+
+
+def get_sales_by_user(user):
+    sales = models.Sale.objects.filter(
+        sold_product__product_seller__main_user=user, completed=True)
+    return sales.all()
 
 
 def verify_payment(transaction_ref):
@@ -209,3 +233,41 @@ def withdrawal_deduct(with_req):
     withdraw_amount = with_req.amount
     seller.total_income = current_total_income - withdraw_amount
     seller.save()
+
+
+def get_user_by_email(email):
+    user = User.objects.filter(username=email)
+    if user.exists():
+        return user.first()
+    else:
+        return None
+
+
+def login_user(username, password):
+    user = authenticate(username=username, password=password)
+    if user is not None:
+
+        token, _ = Token.objects.get_or_create(user=user)
+        rsp_data = {"username": uname, "token": token.key,
+                    "uid": uname}
+        return rsp_data
+    else:
+        return None
+
+
+def get_token_by_seller(seller):
+    token, _ = Token.objects.get_or_create(user=seller.main_user)
+    return token.key
+
+
+def get_chapa_bank_list():
+    rq_url = f"https://api.chapa.co/v1/banks"
+    headers = {
+        'Authorization': f"Bearer {config.CHAPA_SECRET_TOKEN}"
+    }
+    rsp = requests.get(url=rq_url, headers=headers)
+    return rsp.json()
+
+
+def get_file_size(f):
+    return None
