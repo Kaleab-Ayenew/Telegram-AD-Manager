@@ -28,6 +28,7 @@ def create_tempseller(request):
         if utils.get_user_by_email(email):
             return Response(data={"error": "The email was registered by another user."}, status=status.HTTP_400_BAD_REQUEST)
         tempseller_obj = serializer.save()
+        print("Sending v mail")
         utils.send_verification_code(tempseller_obj)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     else:
