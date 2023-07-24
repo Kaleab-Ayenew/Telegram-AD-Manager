@@ -20,17 +20,8 @@ from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # path('accounts/', include('accounts.urls')),
-    # path('channels/', include('channels.urls')),
-    # path('main/', include('main.urls')),
-    # path('bot-webhook/', include('bot_webhooks.urls')),
-    path('chapa/', include('chapa.urls')),
     path('personal-feed-bot/', include('personal_feed_bot.urls')),
     path('ecom_full/', include('ecom_full.urls')),
-    # path('proposal-writer-bot/', include('proposal_writer.urls')),
-    path('social-manager/', include('social_manager.urls')),
-    path('link/', include('link_shortner.urls')),
-    # path('neva-bot/', include('neva_bot.urls')),
     path('black-storm-sub-bot/', include('bot_subscription.urls')),
     path('suqlink/', include('suqlink.urls')),
 ]
