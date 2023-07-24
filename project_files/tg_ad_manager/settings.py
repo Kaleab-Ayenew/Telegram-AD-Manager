@@ -201,3 +201,8 @@ EMAIL_HOST_PASSWORD = 'wgosrtcfibczynzm'
 
 
 HOST_URL = "https://6601-212-8-243-71.ngrok-free.app/" if not PROD else "https://ubuntu-vps.kal-dev.com/"
+
+
+# SUQLINK DATA
+CHAPA_SECRET_TOKEN = env('CHAPA_SECRET_TOKEN')
+CHAPA_WEBHOOK_SECRET = env('CHAPA_WEBHOOK_SECRET')
