@@ -19,7 +19,7 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('master-mind/secret/admin/', admin.site.urls),
     path('personal-feed-bot/', include('personal_feed_bot.urls')),
     path('ecom_full/', include('ecom_full.urls')),
     path('black-storm-sub-bot/', include('bot_subscription.urls')),
