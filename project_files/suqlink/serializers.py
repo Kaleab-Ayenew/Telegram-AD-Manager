@@ -123,5 +123,6 @@ class ProductStatSerializer(serializers.ModelSerializer):
     product_sales = SaleStatSerializer(many=True, read_only=True)
 
     class Meta:
-        fields = ['product_name', 'product_sales', 'product_price']
+        fields = ['product_name', 'product_sales',
+                  'product_price', 'product_id']
         model = Product
