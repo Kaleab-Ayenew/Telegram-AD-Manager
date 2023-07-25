@@ -30,14 +30,36 @@ def send_verification_code(temp_seller):
     code = get_random_string(8)
     temp_seller.verification_code = code
     temp_seller.save()
-
-    send_mail(
-        "Verification Code",
-        f"Dear SUQLINK seller, your email verification code is: {code}",
-        "verify@suqlink.com",
-        [temp_seller.seller_email],
-        fail_silently=False
-    )
+    email_data = {
+        "personalizations": [
+            {
+                "to": [
+                    {
+                        "email": temp_seller.seller_email
+                    }
+                ]
+            }
+        ],
+        "from": {
+            "email": "verify@suqlink.com"
+        },
+        "subject": "SUQLINK VERIFICATION CODE",
+        "content": [
+            {
+                "type": "text/plain",
+                "value": f"Dear SUQLINK seller, your email verification code is: {code}"
+            }
+        ]
+    }
+    sendgrid_api_url = "https://api.sendgrid.com/v3/mail/send"
+    headers = {
+        "Authorization": f"Bearer {config.SENDGRID_API_KEY}"
+    }
+    rsp = requests.post(url=sendgrid_api_url, json=email_data, headers=headers)
+    if rsp.status_code != 202:
+        print(
+            f"[$] Error ##### A PROBLEM HAS OCCURED WHEN SENDING EMAIL TO {temp_seller.seller_email}")
+    return None
 
 
 def create_chapa_subaccount(seller):
