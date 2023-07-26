@@ -38,7 +38,7 @@ class SellerSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     product_file = serializers.FileField(
-        validators=[myvalidators.FileValidator(allowed_types=['application/zip'])])
+        validators=[myvalidators.FileValidator(allowed_types=['application/zip', 'application/vnd.rar', 'application/x-rar'])])
     product_thumbnail = serializers.FileField(
         validators=[myvalidators.FileValidator(allowed_types=['image/jpeg', 'image/png'])])
 
