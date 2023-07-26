@@ -106,7 +106,7 @@ def get_split_payment_link(info, product, transaction_ref):
         "phone_number": info.get("phone_no"),
         "tx_ref": transaction_ref,
         "callback_url": f"{settings.HOST_URL}suqlink/payment/verify/{transaction_ref}/",
-        "return_url": f"http://localhost:3000/purchased/{transaction_ref}",
+        "return_url": f"{config.SUQLINK_PRODUCT_DOMAIN}purchased/{transaction_ref}",
 
     }
     print("Payment Data", post_data)
