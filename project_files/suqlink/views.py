@@ -180,7 +180,7 @@ def chapa_callback_verify(request, transaction_ref):
             # The sellers total income is updated here
             utils.update_seller_income(sale)
         temp_download_link = utils.create_download_link(sale).link_string()
-        rsp_data = {"status": "pending",
+        rsp_data = {"status": "completed",
                     "download_link": temp_download_link}
         return Response(data=rsp_data)
     elif payment_status == "pending":
