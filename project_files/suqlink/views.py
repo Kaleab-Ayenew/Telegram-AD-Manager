@@ -24,7 +24,8 @@ import json
 def create_tempseller(request):
     serializer = TempSellerSerializer(data=request.data)
     if serializer.is_valid():
-        email = serializer.validated_data.get("seller_email")
+        email = serializer.validated_data.get("seller_email").lower()
+        serializer.validated_data.update({"seller_email": email})
         if utils.get_user_by_email(email):
             return Response(data={"error": "The email was registered by another user."}, status=status.HTTP_400_BAD_REQUEST)
         tempseller_obj = serializer.save()
@@ -33,6 +34,19 @@ def create_tempseller(request):
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     else:
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def resend_email(request, temp_data_uuid):
+    temp_seller = get_object_or_404(TemporarySellerData, pk=temp_data_uuid)
+    if temp_seller.vcode_count > 3:
+        return Response(data={"error": "Max verification code reached."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+    email = temp_seller.seller_email.lower()
+    if utils.get_user_by_email(email):
+        return Response(data={"error": "The email was registered by another user."}, status=status.HTTP_400_BAD_REQUEST)
+    utils.send_verification_code(temp_seller)
+    return Response(data={"message": "Verification code was sent to your email."})
 
 
 @api_view(['POST'])
@@ -66,6 +80,7 @@ def verify_email(request, temp_data_uuid):
                 "token": auth_token,
                 "profile_image": str(new_seller.seller_photo)
             }
+            temp_seller.delete()  # Delete the temporary seller when the registration is successful
             return Response(data=rsp_data, status=status.HTTP_201_CREATED)
         else:
             return Response(data=seller_serializer.errors, status=status.HTTP_400_BAD_REQUEST)

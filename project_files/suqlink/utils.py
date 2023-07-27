@@ -29,7 +29,6 @@ def check_file_type(f, test_file_type):
 def send_verification_code(temp_seller):
     code = get_random_string(8)
     temp_seller.verification_code = code
-    temp_seller.save()
     email_data = {
         "personalizations": [
             {
@@ -55,6 +54,8 @@ def send_verification_code(temp_seller):
     headers = {
         "Authorization": f"Bearer {config.SENDGRID_API_KEY}"
     }
+    temp_seller.vcode_count = temp_seller.vcode_count + 1
+    temp_seller.save()
     rsp = requests.post(url=sendgrid_api_url, json=email_data, headers=headers)
     if rsp.status_code != 202:
         print(

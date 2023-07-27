@@ -58,6 +58,10 @@ class TemporarySellerData(models.Model):
     seller_email = models.EmailField(max_length=50, unique=True)
     temp_data_timestamp = models.DateTimeField(auto_now_add=True)
     verification_code = models.CharField(max_length=8, null=True)
+    vcode_count = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.seller_email} | Code: {self.verification_code}"
 
 
 class Seller(models.Model):
@@ -70,10 +74,16 @@ class Seller(models.Model):
     total_income = models.DecimalField(
         decimal_places=2, max_digits=15, default=0.00)
 
+    def __str__(self):
+        return f"{self.seller_username} | {self.total_income}"
+
 
 class ChapaBank(models.Model):
     chapa_bank_id = models.UUIDField(primary_key=True)
     bank_name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.bank_name} | {self.chapa_bank_id}"
 
 
 class Product(models.Model):
@@ -92,6 +102,9 @@ class Product(models.Model):
         upload_to=get_product_file_path, max_length=200)
     product_timestamp = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"{self.product_seller} | {self.product_name} | {self.product_id} | {self.product_price}"
+
 
 class Sale(models.Model):
     sold_product = models.ForeignKey(
@@ -99,6 +112,9 @@ class Sale(models.Model):
     sale_timestamp = models.DateTimeField(auto_now_add=True)
     chapa_transaction_ref = models.UUIDField(null=True, unique=True)
     completed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Product: {self.sold_product.product_id} | tx_ref: {self.chapa_transaction_ref} | Status: {'Completed' if self.completed else 'Waiting/Failed'}"
 
 
 class TempDownloadLink(models.Model):
