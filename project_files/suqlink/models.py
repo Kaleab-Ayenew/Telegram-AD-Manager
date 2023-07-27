@@ -164,4 +164,4 @@ class SuqlinkAdminData(models.Model):
     available_income = models.DecimalField(decimal_places=2, max_digits=15)
 
     def __str__(self):
-        return f"Available Income: {self.available_income}"
+        return f"Available Income: {self.available_income} birr"

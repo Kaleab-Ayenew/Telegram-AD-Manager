@@ -206,6 +206,25 @@ def update_seller_income(sale):
     sale.sold_product.product_seller.save()
 
 
+def get_admin_seller(username):
+    admin = User.objects.filter(is_superuser=True, username=username).first()
+    admin_seller = models.Seller.objects.get(main_user=admin)
+    return admin_seller
+
+
+def update_platform_income(sale):
+    platform_seller = get_admin_seller(config.ADMIN_SELLER_USERNAME)
+    current_total_income = platform_seller.total_income
+    current_sale_price = sale.sold_product.product_price
+    seller_income_percent = config.CHARGE_PERCENT
+    sale_income_for_seller = (current_sale_price * seller_income_percent) / 100
+    sale_income_for_seller = round(sale_income_for_seller, 2)
+    new_total_income = current_total_income + \
+        Decimal(str(sale_income_for_seller))
+    platform_seller.total_income = new_total_income
+    platform_seller.save()
+
+
 def withdraw_to_bank(withdraw_info):
     rq_url = "https://api.chapa.co/v1/transfers"
     headers = {
