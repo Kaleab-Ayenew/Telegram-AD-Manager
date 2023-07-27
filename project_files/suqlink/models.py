@@ -158,3 +158,10 @@ class WithdrawRequest(models.Model):
 
     def __str__(self):
         return f"{self.bank_account_name} | {self.amount} | {self.status}"
+
+
+class SuqlinkAdminData(models.Model):
+    available_income = models.DecimalField(decimal_places=2, max_digits=15)
+
+    def __str__(self):
+        return f"Available Income: {self.available_income}"
