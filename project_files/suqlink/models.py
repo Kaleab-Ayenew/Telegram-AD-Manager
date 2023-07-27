@@ -68,8 +68,6 @@ class Seller(models.Model):
     main_user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name='sellers')
     seller_username = models.EmailField(max_length=100, primary_key=True)
-    seller_photo = models.ImageField(
-        upload_to=get_seller_photo_path, null=True)
     seller_timestamp = models.DateTimeField(auto_now_add=True)
     total_income = models.DecimalField(
         decimal_places=2, max_digits=15, default=0.00)
@@ -156,7 +154,7 @@ class WithdrawRequest(models.Model):
     amount = models.DecimalField(decimal_places=2, max_digits=10, validators=[
                                  MinValueValidator(5)])
     status = models.CharField(max_length=10, default="pending")
-    chapa_webhook_data = models.TextField(null=True, black=True)
+    chapa_webhook_data = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.bank_account_name} | {self.amount} | {self.status}"
