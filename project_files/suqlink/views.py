@@ -150,6 +150,7 @@ class ProductRUD(generics.RetrieveUpdateDestroyAPIView):
 @permission_classes((permissions.IsSeller,))
 def get_full_stats(request):
     sales = utils.get_sales_by_user(request.user)
+    # sales_total_income_sum = utils.get_sale_sum(request.user)
     seller = utils.get_seller_from_user(request.user)
     all_products = utils.get_all_products(seller)
     product_stats = ProductStatSerializer(all_products, many=True)
@@ -261,7 +262,7 @@ def chapa_event_webhook(request):
             return Response(status=status.HTTP_200_OK)
         withdraw_request = utils.get_withdrawal_by_reference(with_ref)
         if not withdraw_request:
-            print("Error: Couldn't withdrawal by reference!")
+            print("Error: Couldn't get withdrawal by reference!")
             return Response(status=status.HTTP_200_OK)
 
         withdraw_request.chapa_webhook_data = json.dumps(data)

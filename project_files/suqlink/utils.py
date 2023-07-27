@@ -147,6 +147,14 @@ def get_sales_by_user(user):
     return sales.all()
 
 
+def get_sale_sum(user):
+    sales = models.Sale.objects.filter(
+        sold_product__product_seller__main_user=user, completed=True)
+    total_sum = sales.aggregate(total_price=Sum('sold_product__product_price'))[
+        'total_price']
+    return total_sum
+
+
 def verify_payment(transaction_ref):
     rq_url = f"https://api.chapa.co/{config.CHAPA_API_VERSION}/transaction/verify/{transaction_ref}"
     headers = {
