@@ -77,8 +77,7 @@ def verify_email(request, temp_data_uuid):
             auth_token = utils.get_token_by_seller(new_seller)
             rsp_data = {
                 "email": new_seller.seller_username,
-                "token": auth_token,
-                "profile_image": str(new_seller.seller_photo)
+                "token": auth_token
             }
             temp_seller.delete()  # Delete the temporary seller when the registration is successful
             return Response(data=rsp_data, status=status.HTTP_201_CREATED)
