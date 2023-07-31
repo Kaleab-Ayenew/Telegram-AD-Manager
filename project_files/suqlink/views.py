@@ -98,7 +98,7 @@ def login_view(request):
         if user is not None:
 
             token, _ = Token.objects.get_or_create(user=user)
-            rsp_data = {"username": uname, "token": token.key,
+            rsp_data = {"email": uname, "token": token.key,
                         "uid": uname}
             return Response(data=rsp_data)
         else:
