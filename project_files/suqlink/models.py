@@ -8,6 +8,8 @@ from datetime import timedelta
 from django.utils.crypto import get_random_string
 from django.core.validators import MinValueValidator, MaxValueValidator
 # Helper functions
+import os
+from pathlib import Path
 
 
 def get_product_thumb_path(instance, filename):
@@ -48,6 +50,17 @@ def get_withdrawal_ref():
         id = get_random_string(10)
         if not WithdrawRequest.objects.filter(withdraw_reference=id).exists():
             return id
+
+
+def _delete_file(path):
+    """ Deletes file from filesystem. """
+    if os.path.isfile(path):
+        os.remove(path)
+
+
+def _remove_path(path):
+    p = Path(path)
+    os.rmdir(p.parent.absolute())
 
 
 class TemporarySellerData(models.Model):
@@ -102,6 +115,17 @@ class Product(models.Model):
 
     def __str__(self):
         return f"{self.product_seller} | {self.product_name} | {self.product_id} | {self.product_price}"
+
+    def delete(self):
+
+        if self.product_thumbnail:
+            _delete_file(self.product_thumbnail.path)
+
+        if self.product_file:
+            _delete_file(self.product_file.path)
+            _remove_path(self.product_file.path)
+
+        super(Product, self).delete()
 
 
 class Sale(models.Model):
