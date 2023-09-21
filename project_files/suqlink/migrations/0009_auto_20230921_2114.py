@@ -6,7 +6,7 @@ from django.db import migrations
 def set_default_sale_price(apps, schema_editor):
     Sale = apps.get_model('suqlink', 'Sale')
     for sale in Sale.objects.filter(sale_price__isnull=True):
-        sale.sale_price = sale.product.product_price
+        sale.sale_price = sale.sold_product.product_price
         sale.save()
 
 
