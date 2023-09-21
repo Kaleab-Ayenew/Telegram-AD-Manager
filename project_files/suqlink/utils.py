@@ -170,7 +170,7 @@ def verify_payment(transaction_ref):
 def create_sale(sold_product, transaction_ref):
     if not models.Sale.objects.filter(chapa_transaction_ref=transaction_ref).exists():
         new_sale = models.Sale.objects.create(
-            sold_product=sold_product, chapa_transaction_ref=transaction_ref)
+            sold_product=sold_product, chapa_transaction_ref=transaction_ref, sale_price=sold_product.product_price)
         return new_sale
     else:
         return None

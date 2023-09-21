@@ -134,6 +134,8 @@ class Sale(models.Model):
     sale_timestamp = models.DateTimeField(auto_now_add=True)
     chapa_transaction_ref = models.UUIDField(null=True, unique=True)
     completed = models.BooleanField(default=False)
+    sale_price = models.DecimalField(default=0, decimal_places=2, max_digits=10, validators=[
+        MinValueValidator(0), MaxValueValidator(1000000)])
 
     def __str__(self):
         return f"Product: {self.sold_product.product_id} | tx_ref: {self.chapa_transaction_ref} | Status: {'Completed' if self.completed else 'Waiting/Failed'}"
