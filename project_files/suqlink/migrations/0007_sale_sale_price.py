@@ -14,6 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='sale',
             name='sale_price',
-            field=models.DecimalField(decimal_places=2, default=0, max_digits=10, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(1000000)]),
+            field=models.DecimalField(decimal_places=2, null=True, max_digits=10, validators=[
+                                      django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(1000000)]),
         ),
     ]
