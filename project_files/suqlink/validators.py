@@ -14,7 +14,7 @@ class FileValidator(object):
         self.content_types = allowed_types
 
     def __call__(self, data):
-        if data.size > (50 * 1024 * 1024):
+        if data.size > (500 * 1024 * 1024):
             raise ValidationError(self.error_messages['file_size_error'])
         if self.content_types:
             content_type = magic.from_buffer(data.read(), mime=True)
