@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+from corsheaders.defaults import default_headers
 from pathlib import Path
 import environ
 
@@ -191,10 +192,16 @@ EMAIL_HOST_USER = env('VERIFY_EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('VERIFY_EMAIL_HOST_PASSWORD')
 
 
-HOST_URL = "https://6601-212-8-243-71.ngrok-free.app/" if not PROD else "https://ubuntu-vps.kal-dev.com/"
+HOST_URL = "https://0653-196-190-62-229.ngrok-free.app/" if not PROD else "https://ubuntu-vps.kal-dev.com/"
 
 
 # SUQLINK DATA
 CHAPA_SECRET_TOKEN = env('CHAPA_SECRET_TOKEN')
 CHAPA_WEBHOOK_SECRET = env('CHAPA_WEBHOOK_SECRET')
 SENDGRID_API_KEY = env('SENDGRID_API_KEY')
+
+
+CORS_ALLOW_HEADERS = (
+    *default_headers,
+    'ngrok-skip-browser-warning',
+)

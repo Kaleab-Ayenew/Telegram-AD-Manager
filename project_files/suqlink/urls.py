@@ -17,4 +17,33 @@ urlpatterns = [
     path("webhook/", views.chapa_event_webhook),
     path("stats/", views.get_full_stats),
     path("bank-list/", views.get_chapa_bank_list),
+    # Video Selling Auth
+    path("yvideos/c/register", views.register_video_client),
+    path("yvideos/c/login", views.login_video_client),
+    path("yvideos/c/me", views.get_client_info),
+
+    # Video Selling Endpoints
+    path("yvideos/create/", views.create_youtube_video),
+    path("yvideos/videos", views.AnonListVideos.as_view()),
+    path("yvideos/videos/<str:platform_id>",
+         views.AnonSingleVideoData.as_view()),
+
+    path("yvideos/s/videos/", views.SellerListVideos.as_view()),
+    path("yvideos/s/videos/<str:platform_id>", views.SellerVideoRUD.as_view()),
+    #     path("yvideos/c/videos", views.ClientListVideos.as_view()),
+    #     path("yvideos/c/videos/<str:platform_id>",
+    #          views.ClientSingleVideoData.as_view()),
+    path("yvideos/c/videos/purchased", views.ClientPurchasedVideos.as_view()),
+
+    path("yvideos/c/videos/purchased/<str:platform_id>",
+         views.ClientPurchasedVideoData.as_view()),
+
+    path("yvideos/c/payment/get-payment-link/<str:platform_id>",
+         views.get_video_payment_link),
+    path("yvideos/c/payment/verify/<str:transaction_ref>",
+         views.video_chapa_callback_verify),
+    # Video Stats
+    path("yvideos/s/stats/",
+         views.video_get_full_stats),
+
 ]

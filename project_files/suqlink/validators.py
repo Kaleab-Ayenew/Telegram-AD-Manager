@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 class FileValidator(object):
     error_messages = {
         'content_type': "Files of type %(content_type)s are not supported.",
-        'file_size_error': "File size can't be larger that 50MB."
+        'file_size_error': "File size can't be larger that 500MB."
     }
 
     def __init__(self, allowed_types=()):

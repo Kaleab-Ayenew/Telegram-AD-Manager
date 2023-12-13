@@ -45,6 +45,22 @@ def get_templink_id():
             return id
 
 
+def get_video_id():
+    while True:
+        id = get_random_string(10)
+        if not YoutubeVideo.objects.filter(platform_id=id).exists():
+            return id
+
+
+def get_seller_id():
+    id = get_random_string(10)
+    return id
+    # while True:
+    #     id = get_random_string(10)
+    #     if not Seller.objects.filter(seller_uuid=id).exists():
+    #         return id
+
+
 def get_withdrawal_ref():
     while True:
         id = get_random_string(10)
@@ -81,6 +97,7 @@ class Seller(models.Model):
     main_user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name='sellers')
     seller_username = models.EmailField(max_length=100, primary_key=True)
+    seller_uuid = models.UUIDField(default=get_seller_id)
     seller_timestamp = models.DateTimeField(auto_now_add=True)
     total_income = models.DecimalField(
         decimal_places=2, max_digits=15, default=0.00)
@@ -191,3 +208,36 @@ class SuqlinkAdminData(models.Model):
 
     def __str__(self):
         return f"Available Income: {self.available_income} birr"
+
+
+class YoutubeVideoClient(models.Model):
+    main_user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='video_client')
+    video_client_username = models.EmailField(max_length=100, primary_key=True)
+    video_client_timestamp = models.DateTimeField(auto_now_add=True)
+
+
+class YoutubeVideo(models.Model):
+    platform_id = models.CharField(
+        max_length=10, default=get_templink_id, editable=False, primary_key=True)
+    video_owner = models.ForeignKey(
+        'Seller', on_delete=models.CASCADE, related_name='youtube_videos')
+    video_id = models.CharField(max_length=70)
+    video_info = models.TextField()
+    video_price = models.DecimalField(decimal_places=2, max_digits=10, validators=[
+        MinValueValidator(0), MaxValueValidator(1000000)])
+
+
+class YoutubeSale(models.Model):
+    sold_video = models.ForeignKey(
+        'YoutubeVideo', on_delete=models.CASCADE, related_name="video_sales")
+    video_buyer = models.ForeignKey(
+        'YoutubeVideoClient', on_delete=models.CASCADE, related_name="video_purchases")
+    sale_timestamp = models.DateTimeField(auto_now_add=True)
+    chapa_transaction_ref = models.UUIDField(null=True, unique=True)
+    completed = models.BooleanField(default=False)
+    sale_price = models.DecimalField(decimal_places=2, max_digits=10, validators=[
+        MinValueValidator(0), MaxValueValidator(1000000)], null=True)
+
+    def __str__(self):
+        return self.sold_video.video_id + " | " + self.sold_video.video_owner.seller_username

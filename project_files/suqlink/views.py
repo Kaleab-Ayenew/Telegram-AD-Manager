@@ -5,8 +5,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.models import Token
 
-from .serializers import TempSellerSerializer, UserCreateSerializer, SellerSerializer, LoginSerializer, ProductSerializer, PaymentInfoSerializer, TempDownloadLink, WithdrawInfoSerializer, PublicProductSerializer, ProductStatSerializer
-from .models import TemporarySellerData, Product
+from .serializers import TempSellerSerializer, UserCreateSerializer, SellerSerializer, LoginSerializer, ProductSerializer, PaymentInfoSerializer, TempDownloadLink, WithdrawInfoSerializer, PublicProductSerializer, ProductStatSerializer, YoutubeSaleSerializer, SellerYoutubeVideoSerializer, ClientYoutubeVideoSerializer, YoutubeClientSerializer, PurchasedVideoSerializer, ClientLoginSerializer, VideoPaymentInfoSerializer, VideoStatSerializer, ClientRegisterSerializer
+from .models import TemporarySellerData, Product, YoutubeVideo
 from . import utils
 from . import permissions
 
@@ -286,3 +286,216 @@ def chapa_event_webhook(request):
 def get_chapa_bank_list(request):
     bank_list = utils.get_chapa_bank_list()
     return Response(data=bank_list, status=status.HTTP_200_OK)
+
+# Video Selling Endpoints ------------------------------------------------ #
+
+
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def register_video_client(request):
+    serializer = ClientRegisterSerializer(data=request.data)
+
+    if serializer.is_valid():
+        email = serializer.validated_data.get("email")
+        password = serializer.validated_data.get("password")
+        new_main_user = User.objects.create_user(
+            **utils.get_random_user_data(email, password))
+
+        video_client_user = YoutubeClientSerializer(
+            data={"video_client_username": email})
+        if video_client_user.is_valid():
+            video_client_user.save(main_user=new_main_user)
+
+        token, _ = Token.objects.get_or_create(user=new_main_user)
+        rsp_data = {"email": email, "token": token.key,
+                    "uid": email}
+        return Response(data=rsp_data)
+    else:
+        return Response(data=serilizer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def login_video_client(request):
+    serializer = ClientLoginSerializer(data=request.data)
+
+    if serializer.is_valid():
+        email = serializer.validated_data.get("email")
+        password = serializer.validated_data.get("password")
+
+        user = authenticate(username=email, password=password)
+        if user is not None:
+
+            token, _ = Token.objects.get_or_create(user=user)
+            rsp_data = {"email": email, "token": token.key,
+                        "uid": email}
+            print("Sending first:", rsp_data)
+            return Response(data=rsp_data)
+        else:
+            return Response(data={"error": "Please provide valid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
+
+    else:
+        return Response(data=serilizer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes((permissions.IsSeller,))
+def create_youtube_video(request):
+    data = request.data.copy()
+    data.update({"video_info": "{}"})
+    youtube_video_serializer = SellerYoutubeVideoSerializer(data=data)
+    if youtube_video_serializer.is_valid():
+        seller = utils.get_seller_from_user(request.user)
+        youtube_video_serializer.save(video_owner=seller)
+        return Response(data={"message": "Video added succesfully!"}, status=status.HTTP_201_CREATED)
+    else:
+        return Response(data=youtube_video_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SellerListVideos(generics.ListAPIView):
+    serializer_class = SellerYoutubeVideoSerializer
+    queryset = YoutubeVideo.objects.all()
+    permission_classes = (permissions.IsVideoOwner,)
+
+
+class SellerVideoRUD(generics.RetrieveUpdateDestroyAPIView):
+
+    serializer_class = SellerYoutubeVideoSerializer
+    permission_classes = [permissions.IsVideoOwner]
+    lookup_field = "platform_id"
+    queryset = YoutubeVideo.objects.all()
+
+
+class AnonListVideos(generics.ListAPIView):
+    serializer_class = ClientYoutubeVideoSerializer
+    permission_classes = [AllowAny]
+    queryset = YoutubeVideo.objects.all()
+
+
+class AnonSingleVideoData(generics.RetrieveAPIView):
+    serializer_class = ClientYoutubeVideoSerializer
+    permission_classes = [AllowAny]
+    queryset = YoutubeVideo.objects.all()
+    lookup_field = "platform_id"
+
+
+class ClientListVideos(generics.ListAPIView):
+    serializer_class = ClientYoutubeVideoSerializer
+    permission_classes = [permissions.IsVideoClient]
+    queryset = YoutubeVideo.objects.all()
+
+
+class ClientPurchasedVideos(generics.ListAPIView):
+    serializer_class = PurchasedVideoSerializer
+    permission_classes = [permissions.IsVideoClient]
+
+    def get_queryset(self):
+        client = utils.get_video_client_from_main_user(self.request.user)
+        queryset = utils.get_client_purchased_videos(client)
+        return queryset
+
+
+class ClientSingleVideoData(generics.RetrieveAPIView):
+    serializer_class = ClientYoutubeVideoSerializer
+    permission_classes = [permissions.IsVideoClient]
+    queryset = YoutubeVideo.objects.all()
+    lookup_field = "platform_id"
+
+
+class ClientPurchasedVideoData(generics.RetrieveAPIView):
+    serializer_class = PurchasedVideoSerializer
+    permission_classes = [permissions.HasPurchasedVideo]
+    queryset = YoutubeVideo.objects.all()
+    lookup_field = "platform_id"
+
+
+@api_view(['GET'])
+@permission_classes((permissions.IsVideoClient,))
+def client_get_video_data(request, video_platform_id):
+    video = utils.get_video_by_platform_id(video_platform_id)
+
+    if not video:
+        return Response(data={"error": "Video couldn't be found."})
+
+
+@api_view(['GET'])
+@permission_classes((permissions.IsVideoClient,))
+def get_client_info(request):
+    main_user = request.user
+    response = {
+        "id": main_user.id,
+        "email": main_user.email,
+        "email_verified": True,
+        "is_active": 1,
+        "name": main_user.email.split("@")[0]
+    }
+    return Response(data=response, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def get_video_payment_link(request, platform_id):
+    payment_info_serializer = VideoPaymentInfoSerializer(data=request.data)
+    if payment_info_serializer.is_valid():
+        validated_data = payment_info_serializer.validated_data
+        transaction_ref = str(uuid4())
+        video_obj = utils.get_video_by_platform_id(platform_id)
+        if not video_obj:
+            return Response(data={"error": "Invalid video."}, status=status.HTTP_404_NOT_FOUND)
+        payment_link = utils.get_video_payment_link(
+            validated_data, video_obj, transaction_ref)
+        if payment_link:
+            video_buyer = utils.get_video_client_from_main_user(request.user)
+            new_sale = utils.create_video_sale(
+                sold_video=video_obj, tx_ref=transaction_ref, video_buyer=video_buyer)
+            return Response(data={"link": payment_link})
+
+        else:
+            return Response(data={"error": "An error has occured"})
+    else:
+        return Response(data=payment_info_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def video_chapa_callback_verify(request, transaction_ref):
+    payment_status = utils.verify_payment(transaction_ref)
+    # DANGEROUS: Make sure that this doesn't allow for DUPLICATE REQUESTS
+    if payment_status == "success":
+        sale = utils.get_video_sale_by_tx_ref(transaction_ref)
+        if not sale.completed:
+            sale.completed = True
+            sale.save()
+            # The sellers total income is updated here
+            utils.update_video_seller_income(sale)
+            utils.update_video_platform_income(sale)
+
+        rsp_data = {"status": "completed"}
+        return Response(data=rsp_data)
+    elif payment_status == "pending":
+        rsp_data = {"status": "pending"}
+        return Response(data=rsp_data)
+    elif payment_status == "failed":
+        sale = utils.get_video_sale_by_tx_ref(transaction_ref)
+        if sale:
+            sale.delete()
+        rsp_data = {"status": "failed"}
+        return Response(data=rsp_data)
+    else:
+        rsp_data = {"status": "error"}
+        return Response(data=rsp_data)
+
+
+@api_view(['GET'])
+@permission_classes((permissions.IsSeller,))
+def video_get_full_stats(request):
+    sales = utils.get_video_sales_by_user(request.user)
+    # sales_total_income_sum = utils.get_sale_sum(request.user)
+    seller = utils.get_seller_from_user(request.user)
+    all_products = YoutubeVideo.objects.filter(video_owner=seller)
+    video_stats = VideoStatSerializer(all_products, many=True)
+    total_sales = len(sales)
+    total_income = seller.total_income
+    rsp_data = {"total_sales": total_sales,
+                "total_income": total_income, "video_stats": video_stats.data}
+    return Response(data=rsp_data, status=status.HTTP_200_OK)

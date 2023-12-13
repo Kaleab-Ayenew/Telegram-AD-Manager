@@ -1,3 +1,4 @@
+from googleapiclient.discovery import build
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
@@ -14,6 +15,7 @@ from uuid import uuid4
 from decimal import Decimal
 import hashlib
 import hmac
+from secretpy import Caesar, alphabets as al
 
 import magic
 
@@ -321,3 +323,287 @@ def get_chapa_bank_list():
 
 def get_file_size(f):
     return None
+
+
+def get_video_by_platform_id(platform_id):
+    try:
+        video = models.YoutubeVideo.objects.get(platform_id=platform_id)
+        return video
+    except:
+        return None
+
+
+def get_random_user_data(email, password):
+    first_name = "Video"
+    last_name = "Client"
+    return {"first_name": first_name, "last_name": last_name, "email": email, "username": email, "password": password}
+
+
+def get_video_client_from_main_user(user):
+    try:
+        client = models.YoutubeVideoClient.objects.get(main_user=user)
+        return client
+    except models.YoutubeVideoClient.DoesNotExist:
+        return None
+
+
+def user_has_purchased_video(main_user, video):
+    client = get_video_client_from_main_user(main_user)
+    video_purchase = models.YoutubeSale.objects.filter(
+        video_buyer=client, sold_video=video, completed=True)
+    return video_purchase.exists()
+
+
+def get_client_purchased_videos(client):
+    video_purchases = client.video_purchases.filter(completed=True).all()
+    v_list = []
+
+    for p in video_purchases:
+        v_list.append(p.sold_video)
+
+    return list(set(v_list))
+
+
+def rot_encrypt(text):
+
+    alphabet = [
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "abcdefghijklmnopqrstuvwxyz",
+
+    ]
+    key = 1
+    final_enc = []
+    for t in text:
+        if t not in alphabet[1] and t not in alphabet[0]:
+            final_enc.append(t)
+        elif t in alphabet[0]:
+            t_index = alphabet[0].find(t)
+            new_t_index = t_index + key
+            if new_t_index > 25:
+                new_t_index = new_t_index - 26
+            new_let = alphabet[0][new_t_index]
+            final_enc.append(new_let)
+        elif t in alphabet[1]:
+            t_index = alphabet[1].find(t)
+            new_t_index = t_index + key
+            if new_t_index > 25:
+                new_t_index = new_t_index - 26
+            new_let = alphabet[1][new_t_index]
+            final_enc.append(new_let)
+    enc_text = ("").join(final_enc)
+    return enc_text
+
+
+def get_youtube_channel_info(channel_id):
+    # Replace with your actual YouTube Data API v3 key
+    api_key = 'AIzaSyDV8UqR7NxKJg6defUVdo73fUwLvup97sk'
+    url = f'https://www.googleapis.com/youtube/v3/channels?id={channel_id}&part=snippet&key={api_key}'
+
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        items = data.get('items', [])
+        if items:
+            channel_info = items[0]
+            snippet = channel_info.get('snippet', {})
+
+            info = {
+                "title": snippet.get('title'),
+                "id": channel_id,
+                "description": snippet.get('description'),
+                "thumbnail_url": snippet.get('thumbnails', {}).get('default', {}).get('url'),
+            }
+            return info
+        else:
+            return 'No data found for the provided channel ID.'
+    else:
+        return f'Error: {response.status_code}'
+
+
+def get_ychannel_info(channel_id):
+    api_key = 'AIzaSyDV8UqR7NxKJg6defUVdo73fUwLvup97sk'
+    youtube = build('youtube', 'v3', developerKey=api_key)
+
+    channel_response = youtube.channels().list(
+        part='snippet',  # ,contentDetails,statistics',
+        id=channel_id).execute()
+
+    items = channel_response.get('items')
+    if items:
+        item = items[0]
+        snippet = item['snippet']
+        data = {
+            "title": snippet.get('title'),
+            "id": channel_id,
+            # "description" : snippet.get('description'),
+            "thumbnail_url": snippet.get('thumbnails')['default']['url'],
+        }
+        return data
+
+
+def get_yvideo_status(video_id):
+
+    api_key = 'AIzaSyDV8UqR7NxKJg6defUVdo73fUwLvup97sk'
+
+    youtube = build('youtube', 'v3', developerKey=api_key)
+
+    # Replace 'VIDEO_ID' with the ID of the video you're checking
+    request = youtube.videos().list(
+        part='status',
+        id=video_id
+    )
+    response = request.execute()
+    print(response)
+    # Check the privacy status
+    items = response.get('items')
+    if items:
+        item = items[0]
+        privacy_status = item['status']['privacyStatus']
+        print(f'The video is {privacy_status}.')
+        return privacy_status
+
+
+def get_youtube_video_info(video_id):
+    # Replace with your actual YouTube Data API v3 key
+    api_key = 'AIzaSyDV8UqR7NxKJg6defUVdo73fUwLvup97sk'
+    url = f'https://www.googleapis.com/youtube/v3/videos?id={video_id}&part=snippet,statistics&key={api_key}'
+
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        items = data.get('items', [])
+        if items:
+            video_info = items[0]
+            snippet = video_info.get('snippet', {})
+            statistics = video_info.get('statistics', {})
+            th_list = snippet.get('thumbnails', {})
+            th_url = th_list.get("maxres") if th_list.get("maxres") else th_list.get(
+                "standard") if th_list.get("standard") else th_list.get("high")
+            ch_id = snippet.get("channelId")
+            info = {
+                'title': snippet.get('title'),
+                'thumbnail_url': th_url.get("url"),
+                'views': statistics.get('viewCount'),
+                'likes': statistics.get('likeCount'),
+                'description': snippet.get('description'),
+                "ch_info": get_youtube_channel_info(ch_id)
+            }
+            return info
+        else:
+            return 'No data found for the provided video ID.'
+    else:
+        return f'Error: {response.status_code}'
+
+# Example usage:
+# video_info = get_youtube_video_info('VIDEO_ID_HERE')
+# print(video_info)
+
+
+def get_video_info(video_id):
+    api_key = 'AIzaSyDV8UqR7NxKJg6defUVdo73fUwLvup97sk'
+    youtube = build('youtube', 'v3', developerKey=api_key)
+    print(get_yvideo_status(video_id))
+    request = youtube.videos().list(
+        part="snippet,statistics",
+        id=video_id
+    )
+    response = request.execute()
+    # print(response)
+    if response['items']:
+        print(response)
+
+        item = response['items'][0]
+        ch_info = get_ychannel_info(item['snippet']['channelId'])
+        title = item['snippet']['title']
+        description = item['snippet']['description']
+        th_list = item.get('snippet').get('thumbnails')
+        thumbnail_url = th_list.get("maxres") if th_list.get("maxres") else th_list.get(
+            "standard") if th_list.get("standard") else th_list.get("high")
+        views = item['statistics']['viewCount']
+        likes = item['statistics']['likeCount']
+        print(thumbnail_url)
+        return {
+            'title': title,
+            'thumbnail_url': thumbnail_url.get("url"),
+            'views': views,
+            'likes': likes,
+            'ch_info': ch_info,
+            'description': description
+        }
+    else:
+        return None
+
+
+def get_video_payment_link(info, video, transaction_ref):
+    rq_url = f"https://api.chapa.co/{config.CHAPA_API_VERSION}/transaction/initialize"
+    headers = {
+        'Authorization': f'Bearer {config.CHAPA_SECRET_TOKEN}',
+        'Content-Type': 'application/json'
+    }
+    post_data = {
+        "amount": float(video.video_price),
+        "currency": "ETB",
+        "phone_number": info.get("phone_no"),
+        "tx_ref": transaction_ref,
+        "callback_url": f"{settings.HOST_URL}suqlink/yvideos/c/payment/verify/{transaction_ref}",
+        "return_url": f"{config.YT_VIDEO_DOMAIN}myvideos",
+
+    }
+    print("Payment Data", post_data)
+    rsp = requests.post(url=rq_url, headers=headers, json=post_data)
+    print("Payment Response", rsp.json())
+
+    if rsp.status_code != 200:
+        return None
+
+    return rsp.json().get("data").get("checkout_url")
+
+
+def create_video_sale(sold_video, video_buyer, tx_ref):
+    if not models.YoutubeSale.objects.filter(chapa_transaction_ref=tx_ref).exists():
+        new_video_sale = models.YoutubeSale.objects.create(
+            sold_video=sold_video, video_buyer=video_buyer, chapa_transaction_ref=tx_ref, sale_price=sold_video.video_price)
+        return new_video_sale
+    else:
+        return None
+
+
+def get_video_sale_by_tx_ref(transaction_ref):
+    try:
+        sale = models.YoutubeSale.objects.get(
+            chapa_transaction_ref=transaction_ref)
+        return sale
+    except models.YoutubeSale.DoesNotExist:
+        return None
+
+
+def update_video_seller_income(sale):
+    current_total_income = sale.sold_video.video_owner.total_income
+    current_sale_price = sale.sold_video.video_price
+    seller_income_percent = 100 - config.CHARGE_PERCENT
+    sale_income_for_seller = (current_sale_price * seller_income_percent) / 100
+    sale_income_for_seller = round(sale_income_for_seller, 2)
+    new_total_income = current_total_income + \
+        Decimal(str(sale_income_for_seller))
+    sale.sold_video.video_owner.total_income = new_total_income
+    sale.sold_video.video_owner.save()
+
+
+def update_video_platform_income(sale):
+    platform_seller = get_admin_seller(config.ADMIN_SELLER_USERNAME)
+    current_total_income = platform_seller.total_income
+    current_sale_price = sale.sold_video.video_price
+    seller_income_percent = config.CHARGE_PERCENT
+    sale_income_for_seller = (current_sale_price * seller_income_percent) / 100
+    sale_income_for_seller = round(sale_income_for_seller, 2)
+    new_total_income = current_total_income + \
+        Decimal(str(sale_income_for_seller))
+    platform_seller.total_income = new_total_income
+    platform_seller.save()
+
+
+def get_video_sales_by_user(user):
+    seller = get_seller_from_user(user)
+    sales = models.YoutubeSale.objects.filter(
+        sold_video__video_owner__main_user=user, completed=True).all()
+    return sales
