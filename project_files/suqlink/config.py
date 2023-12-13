@@ -6,5 +6,5 @@ CHARGE_PERCENT = 20
 CHAPA_WEBHOOK_SECRET = settings.CHAPA_WEBHOOK_SECRET
 SENDGRID_API_KEY = settings.SENDGRID_API_KEY
 SUQLINK_PRODUCT_DOMAIN = "https://p.suqlink.com/"
-YT_VIDEO_DOMAIN = "http://localhost:3000/"
+YT_VIDEO_DOMAIN = "http://localhost:3000/" if not settings.PROD else "https://suqlink-youtube-market.vercel.app/"
 ADMIN_SELLER_USERNAME = "kalish"
