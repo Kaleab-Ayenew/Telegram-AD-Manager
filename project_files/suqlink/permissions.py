@@ -29,6 +29,8 @@ class IsVideoClient(IsAuthenticated):
 
 
 class HasPurchasedVideo(IsVideoClient):
+    message = "You don't have permission to watch this video."
+
     def has_object_permission(self, request, view, obj):
 
         result = utils.user_has_purchased_video(

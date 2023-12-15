@@ -203,7 +203,10 @@ class SellerYoutubeVideoSerializer(serializers.ModelSerializer):
     def save(self, **kwargs):
         video_url = self.validated_data.get("video_id")
         parsed_url = urlparse(video_url)
-        video_id = parse_qs(parsed_url.query).get('v')[0]
+        if parsed_url.hostname == "youtu.be":
+            video_id = parsed_url.path[1:]
+        else:
+            video_id = parse_qs(parsed_url.query).get('v')[0]
 
         video_info = utils.get_youtube_video_info(video_id)
         self.validated_data.update(
