@@ -580,7 +580,7 @@ def get_video_sale_by_tx_ref(transaction_ref):
 def update_video_seller_income(sale):
     current_total_income = sale.sold_video.video_owner.total_income
     current_sale_price = sale.sold_video.video_price
-    seller_income_percent = 100 - config.CHARGE_PERCENT
+    seller_income_percent = 100 - config.YOUTUBE_CHARGE_PERCENT
     sale_income_for_seller = (current_sale_price * seller_income_percent) / 100
     sale_income_for_seller = round(sale_income_for_seller, 2)
     new_total_income = current_total_income + \
@@ -593,7 +593,7 @@ def update_video_platform_income(sale):
     platform_seller = get_admin_seller(config.ADMIN_SELLER_USERNAME)
     current_total_income = platform_seller.total_income
     current_sale_price = sale.sold_video.video_price
-    seller_income_percent = config.CHARGE_PERCENT
+    seller_income_percent = config.YOUTUBE_CHARGE_PERCENT
     sale_income_for_seller = (current_sale_price * seller_income_percent) / 100
     sale_income_for_seller = round(sale_income_for_seller, 2)
     new_total_income = current_total_income + \
