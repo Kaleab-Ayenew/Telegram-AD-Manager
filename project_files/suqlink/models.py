@@ -53,7 +53,7 @@ def get_video_id():
 
 
 def get_seller_id():
-    id = get_random_string(10)
+    id = uuid4().__str__()
     return id
     # while True:
     #     id = get_random_string(10)
