@@ -192,7 +192,7 @@ EMAIL_HOST_USER = env('VERIFY_EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('VERIFY_EMAIL_HOST_PASSWORD')
 
 
-HOST_URL = "https://0653-196-190-62-229.ngrok-free.app/" if not PROD else "https://ubuntu-vps.kal-dev.com/"
+HOST_URL = "https://0653-196-190-62-229.ngrok-free.app/" if not PROD else "https://api.suqlink.com/"
 
 
 # SUQLINK DATA
